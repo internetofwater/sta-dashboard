@@ -14,3 +14,20 @@ Ideally, the dashboard would be able to consume from multiple endpoints, that th
  
 This is the official documentation for the API http://docs.opengeospatial.org/is/15-078r6/15-078r6.html
 This is some good interactive documentation for the API, focus on the GET requests https://gost1.docs.apiary.io/#
+
+# Dependencies
+- requirements.txt
+
+# Storyboard
+## [x] Show location points on a map
+1. [x] Use OSM tiles and leaflet.js
+2. [x] Test on multiple endpoints
+## [ ] Show location in tabular
+## [ ] Filter points on the map by their propterties
+1. [ ] Select filterable & supported features
+## [ ] Show information of each point
+1. [ ] Show summaries of key features at hover
+2. [ ] Show a dialog box at click that supports
+    1. [ ] Feature visualization (tabular, scatter plot, line chart)
+    2. [ ] Export as CSV
+## [ ] Docker containerization
