@@ -16,7 +16,7 @@ This is the official documentation for the API http://docs.opengeospatial.org/is
 This is some good interactive documentation for the API, focus on the GET requests https://gost1.docs.apiary.io/#
 
 # Dependencies
-- requirements.txt
+- [See requirements.txt](requirements.txt)
 
 # Storyboard
 ## [x] Show location points on a map
