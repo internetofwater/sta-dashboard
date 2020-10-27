@@ -19,6 +19,9 @@ This is some good interactive documentation for the API, focus on the GET reques
 - requirements.txt
 
 # Storyboard
+## [ ] Add a backend database
+1. [ ] SQLite3 for development; PostgreSQL for deployment
+2. [ ] Download data from API endpoints and update regularly
 ## [x] Show location points on a map
 1. [x] Use OSM tiles and leaflet.js
 2. [x] Test on multiple endpoints
