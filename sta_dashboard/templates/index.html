@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 <head>
+    <link rel="icon" type="image/png" href="https://internetofwater.org/wp-content/uploads/2018/11/cropped-iow_favicon-32x32.png" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
         crossorigin="" />
@@ -22,7 +23,7 @@
     <div id="map"></div>
     <script>
         // Add base layer tiles
-        var map = L.map('map').setView({{locations_latlon[0][1:]}}, 5);
+        var map = L.map('map').setView([50.113453, 8.594496], 5);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -34,11 +35,9 @@
         // {s} is the subdomain of cartodb
 
         // Add point markers
-        {% block body %}
-        {% endblock %}
-        {% for id, lat, lon in locations_latlon %}
-        marker = new L.marker([{{ lat }}, {{ lon }}])
-            .bindPopup('{{ id }}')
+        {% for location in locations %}
+        marker = new L.marker([{{ location.latitude}} , {{location.longitude}}])
+            .bindPopup('{{ location.description}}')
             .addTo(map)
         {% endfor %}
     </script>
