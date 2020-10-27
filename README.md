@@ -27,7 +27,7 @@ This is some good interactive documentation for the API, focus on the GET reques
 1. [x] Use OSM tiles and leaflet.js
 2. [x] Test on multiple endpoints
 3. [ ] Cluster markers at lower zoom levels
-4. [?] Potential issue: slow loading when the number of points goes above thousands/tens of thousands.
+4. [ ] Potential issue: slow loading when the number of points goes above thousands/tens of thousands.
 ## [ ] Show location in tabular
 ## [ ] Filter points on the map by their propterties
 1. [ ] Select filterable & supported features
