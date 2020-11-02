@@ -29,11 +29,13 @@ class Endpoint:
         locations_list = []
 
         response = requests.get(url)
-        while True and len(locations_list) < 1000:
+        while True:
             locations_list.extend(
                 response.json()['value']
             )
-            if not '@iot.nextLink' in response.json().keys():
+            if '@iot.nextLink' in response.json().keys():
+                response = requests.get(response.json()['@iot.nextLink'])
+            else:
                 break
 
         return locations_list

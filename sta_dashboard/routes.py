@@ -15,10 +15,8 @@ def index():
                 )
             
         zoom_level = 3 if len(endpoints) > 1 else 5
-        print(len(locations))
         return render_template('index.html', locations=locations, zoom_level=zoom_level)
     
     locations = Location.query.filter(
         Location.endpoint == 'internetofwater').all()
-    print(len(locations))
     return render_template('index.html', locations=locations, zoom_level=5)
