@@ -5,7 +5,6 @@ class Location(db.Model):
     endpoint = db.Column(db.String, nullable=False)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
-    properties = db.Column(db.PickleType, nullable=False)
     encodingtype = db.Column(db.String, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     latitude = db.Column(db.Float, nullable=False)

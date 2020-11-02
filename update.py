@@ -43,7 +43,7 @@ db.drop_all()
 db.create_all()
 
 for endpoint in list(ENDPOINTS.keys()):
-    tmp = Endpoint('datacove')
+    tmp = Endpoint(endpoint)
     locations_list = tmp.get_locations()
 
     for location in locations_list:
@@ -51,7 +51,7 @@ for endpoint in list(ENDPOINTS.keys()):
             endpoint=endpoint,
             name=location['name'],
             description=location['description'],
-            properties=pickle.dumps(location['properties']),
+            # properties=pickle.dumps(location['properties']),
             encodingtype=location['encodingType'],
             longitude=location['location']['coordinates'][0],
             latitude=location['location']['coordinates'][1],
