@@ -29,11 +29,13 @@ class Endpoint:
         locations_list = []
 
         response = requests.get(url)
-        while True and len(locations_list) < 1000:
+        while True:
             locations_list.extend(
                 response.json()['value']
             )
-            if not '@iot.nextLink' in response.json().keys():
+            if '@iot.nextLink' in response.json().keys():
+                response = requests.get(response.json()['@iot.nextLink'])
+            else:
                 break
 
         return locations_list
@@ -43,7 +45,7 @@ db.drop_all()
 db.create_all()
 
 for endpoint in list(ENDPOINTS.keys()):
-    tmp = Endpoint('datacove')
+    tmp = Endpoint(endpoint)
     locations_list = tmp.get_locations()
 
     for location in locations_list:
@@ -51,7 +53,7 @@ for endpoint in list(ENDPOINTS.keys()):
             endpoint=endpoint,
             name=location['name'],
             description=location['description'],
-            properties=pickle.dumps(location['properties']),
+            # properties=pickle.dumps(location['properties']),
             encodingtype=location['encodingType'],
             longitude=location['location']['coordinates'][0],
             latitude=location['location']['coordinates'][1],

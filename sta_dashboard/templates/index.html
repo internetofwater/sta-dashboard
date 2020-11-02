@@ -2,17 +2,32 @@
 
 <head>
     <link rel="icon" type="image/png" href="https://internetofwater.org/wp-content/uploads/2018/11/cropped-iow_favicon-32x32.png" />
+
+    <!-- Load Leaflet from CDN -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
         crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
         integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
         crossorigin=""></script>
+
+    <!-- Load Leaflet MarkerCluster from CDN -->
+    <link rel="stylesheet" type="text/css"
+        href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"
+        integrity="sha512-BBToHPBStgMiw0lD4AtkRIZmdndhB6aQbXpX7omcrXeG2PauGBl2lzq2xUZTxaLxYz5IDHlmneCZ1IJ+P3kYtQ=="
+        crossorigin="">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"
+        integrity="sha512-RLEjtaFGdC4iQMJDbMzim/dOvAu+8Qp9sw7QE4wIMYcg2goVoivzwgSZq9CsIxp4xKAZPKh5J2f2lOko2Ze6FQ=="
+        crossorigin="">
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"
+        integrity="sha512-MQlyPV+ol2lp4KodaU/Xmrn+txc1TP15pOBF/2Sfre7MRsA/pB4Vy58bEqe9u7a7DczMLtU5wT8n7OblJepKbg=="
+        crossorigin=""></script>
+
     <style>
         #map {
             position: absolute;
             top: 0;
-            left: 0;
+            left: 200px;
             bottom: 0;
             right: 0;
         }
@@ -23,7 +38,7 @@
     <div id="map"></div>
     <script>
         // Add base layer tiles
-        var map = L.map('map').setView([50.113453, 8.594496], 5);
+        var map = L.map('map').setView([{{ locations[0].latitude }} , {{ locations[0].longitude }}], {{zoom_level}});
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -34,13 +49,38 @@
         // {z} is the zoom level
         // {s} is the subdomain of cartodb
 
+        // Create a new MarkerClusterGroup
+        var markers = L.markerClusterGroup({
+            spiderfyOnMaxZoom: false,
+            chunkedLoading: true
+        });
+
         // Add point markers
+        var markerList = [];
+
         {% for location in locations %}
-        marker = new L.marker([{{ location.latitude}} , {{location.longitude}}])
-            .bindPopup('{{ location.description}}')
-            .addTo(map)
+            var marker = L.marker(
+                [{{ location.latitude }} , {{ location.longitude }}]
+            );
+            marker.bindPopup('{{ location.description }}');
+            markerList.push(marker);
         {% endfor %}
+
+        markers.addLayers(markerList);
+        map.addLayer(markers);
+
     </script>
+
+    <div id="endpoints-select">
+        <h4>Showing {{ locations|length }} points.</h4>
+        <form id="endpoints-checkbox" method="POST" action="/">
+            <input type="checkbox" name="endpoint" value="internetofwater" /> Internet of Water<br>
+            <input type="checkbox" name="endpoint" value="datacove" /> datacove.eu <br>
+            <input type="checkbox" name="endpoint" value="newmexicowaterdata" /> New Mexico Water Data <br>
+            <input type="checkbox" name="endpoint" value="taiwan" /> Taiwan Air Quality <br>
+            <input type="submit">
+        </form>
+    </div>
 </body>
 
 </html>
