@@ -20,10 +20,10 @@
 </head>
 
 <body>
-    <div id="map"></div>
+    <div id="map" style="height: 100%; margin-left: 200px;"></div>
     <script>
         // Add base layer tiles
-        var map = L.map('map').setView([50.113453, 8.594496], 5);
+        var map = L.map('map').setView([{{ locations[0].latitude }} , {{ locations[0].longitude }}], {{zoom_level}});
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -36,11 +36,21 @@
 
         // Add point markers
         {% for location in locations %}
-        marker = new L.marker([{{ location.latitude}} , {{location.longitude}}])
-            .bindPopup('{{ location.description}}')
+        marker = new L.marker([{{ location.latitude }} , {{ location.longitude }}])
+            .bindPopup('{{ location.description }}')
             .addTo(map)
         {% endfor %}
     </script>
+
+    <div id="endpoints-select">
+        <form id="endpoints-checkbox" method="POST" action="/">
+            <input type="checkbox" name="endpoint" value="internetofwater" /> Internet of Water<br>
+            <input type="checkbox" name="endpoint" value="datacove" /> datacove.eu <br>
+            <input type="checkbox" name="endpoint" value="newmexicowaterdata" /> New Mexico Water Data <br>
+            <input type="checkbox" name="endpoint" value="taiwan" /> Taiwan Air Quality <br>
+            <input type="submit">
+        </form>
+    </div>
 </body>
 
 </html>

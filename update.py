@@ -38,24 +38,12 @@ class Endpoint:
 
         return locations_list
 
-    # # @property
-    # def get_latlon(self):
-
-    #     locations_latlon_list = []
-    #     for location in self.locations:
-    #         locations_latlon_list.append(
-    #             ['iot.id: {}'.format(location['@iot.id']),
-    #              *location['location']['coordinates'][::-1]]
-    #         )
-
-    #     return locations_latlon_list
-
 
 db.drop_all()
 db.create_all()
 
 for endpoint in list(ENDPOINTS.keys()):
-    tmp = Endpoint('datacove')
+    tmp = Endpoint(endpoint)
     locations_list = tmp.get_locations()
 
     for location in locations_list:
@@ -63,7 +51,7 @@ for endpoint in list(ENDPOINTS.keys()):
             endpoint=endpoint,
             name=location['name'],
             description=location['description'],
-            properties=pickle.dumps(location['properties']),
+            # properties=pickle.dumps(location['properties']),
             encodingtype=location['encodingType'],
             longitude=location['location']['coordinates'][0],
             latitude=location['location']['coordinates'][1],
