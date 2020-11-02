@@ -51,15 +51,24 @@
 
         // Create a new MarkerClusterGroup
         var markers = L.markerClusterGroup({
-            spiderfyOnMaxZoom: false
+            spiderfyOnMaxZoom: false,
+            chunkedLoading: true
         });
+
         // Add point markers
+        var markerList = [];
+
         {% for location in locations %}
-        markers.addLayer(L.marker([{{ location.latitude }} , {{ location.longitude }}])
-            .bindPopup('{{ location.description }}')
-            .addTo(map))
+            var marker = L.marker(
+                [{{ location.latitude }} , {{ location.longitude }}]
+            );
+            marker.bindPopup('{{ location.description }}');
+            markerList.push(marker);
         {% endfor %}
+
+        markers.addLayers(markerList);
         map.addLayer(markers);
+
     </script>
 
     <div id="endpoints-select">

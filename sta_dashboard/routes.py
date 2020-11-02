@@ -12,12 +12,12 @@ def index():
         for endpoint in endpoints:
             locations.extend(
                 Location.query.filter(
-                    Location.endpoint == endpoint).limit(500).all()
+                    Location.endpoint == endpoint).all()
                 )
             
         zoom_level = 3 if len(endpoints) > 1 else 5
         return render_template('index.html', locations=locations, zoom_level=zoom_level)
     
     locations = Location.query.filter(
-        Location.endpoint == 'internetofwater').limit(500).all()
+        Location.endpoint == 'internetofwater').all()
     return render_template('index.html', locations=locations, zoom_level=5)
