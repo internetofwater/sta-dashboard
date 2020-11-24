@@ -1,14 +1,15 @@
 import pickle
 import requests
+import time
 
 from sta_dashboard import db
 from sta_dashboard.models import Location, Thing
 
 ENDPOINTS = {
     'internetofwater': 'https://sta-demo.internetofwater.dev/api/v1.1',
-    # 'taiwan': 'https://sta.ci.taiwan.gov.tw/STA_AirQuality_EPAIoT/v1.1',
-    # 'newmexicowaterdata': 'https://st.newmexicowaterdata.org/FROST-Server/v1.1',
-    # 'datacove': 'https://service.datacove.eu/AirThings/v1.1/'
+    'taiwan': 'https://sta.ci.taiwan.gov.tw/STA_AirQuality_EPAIoT/v1.1',
+    'newmexicowaterdata': 'https://st.newmexicowaterdata.org/FROST-Server/v1.1',
+    'datacove': 'https://service.datacove.eu/AirThings/v1.1/'
 }
 
 
@@ -34,7 +35,11 @@ class Endpoint:
                 response.json()['value']
             )
             if '@iot.nextLink' in response.json().keys():
-                response = requests.get(response.json()['@iot.nextLink'])
+                try:
+                    response = requests.get(response.json()['@iot.nextLink'])
+                except requests.exceptions.ConnectionError:
+                    time.sleep(5)
+                    continue
             else:
                 break
 
@@ -59,7 +64,11 @@ class Endpoint:
                     )
                 )
             if '@iot.nextLink' in response.json().keys():
-                response = requests.get(response.json()['@iot.nextLink'])
+                try:
+                    response = requests.get(response.json()['@iot.nextLink'])
+                except requests.exceptions.ConnectionError:
+                    time.sleep(5)
+                    continue
             else:
                 break
             
@@ -95,6 +104,7 @@ if __name__ == '__main__':
     
     for endpoint in list(ENDPOINTS.keys()):
         print('{}...'.format(endpoint), end='')
+        start_timestamp = time.time()
         edp = Endpoint(endpoint)
         cached_things = edp.cache_from_things()
 
@@ -110,7 +120,7 @@ if __name__ == '__main__':
             )
             db.session.add(new_thing)
 
-        print('finished')
+        print('finished within {:.2f} seconds'.format(time.time() - start_timestamp))
 
     db.session.commit()
 

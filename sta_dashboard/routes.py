@@ -10,12 +10,11 @@ def index():
         
         locations = []
         for endpoint in endpoints:
-            locations.append(
+            locations.extend(
                 Thing.query.with_entities(Thing.latitude, Thing.longitude).filter(
                     Thing.endpoint == endpoint).all()
                 )
             
-        import pdb; pdb.set_trace()
         zoom_level = 3 if len(endpoints) > 1 else 5
         return render_template('index.html', locations=locations, zoom_level=zoom_level)
     
