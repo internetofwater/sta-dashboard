@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     var a = document.createElement('a'); // Create anchor for link to datastreams
                     var datastreams_text = document.createTextNode(row[2][i]['name']);
                     a.appendChild(datastreams_text);
-                    a.title = row[2][i]['name'];
                     a.href = row[2][i]['@iot.selfLink'];
                     a.target = '_blank';
 
