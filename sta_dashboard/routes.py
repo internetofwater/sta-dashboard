@@ -20,14 +20,20 @@ def show_points():
     endpoints = re.findall(r'\w+', request.form['endpoints']) #TODO: support names that contain non-letter chars
     
     locations = []
+    first_latlons = [] # save first latlon pair at each endpoint, use the average pair as default view latlon
+    
     for endpoint in endpoints:
-        locations.extend(
-            Thing.query.with_entities(Thing.latitude, Thing.longitude, Thing.datastreams).filter(
-                Thing.endpoint == endpoint).all()
-        )
-    zoom_level = 2 if len(endpoints) > 1 else 5
+        
+        query_result = Thing.query.with_entities(Thing.latitude, Thing.longitude, Thing.datastreams).filter(
+            Thing.endpoint == endpoint).all()
+        
+        locations.extend(query_result)
+        first_latlons.append(query_result[0][:2])
+        
+    zoom_level = 3 if len(endpoints) > 1 else 5
     
     return jsonify({
+        'viewLatlon': [sum(latlon) / len(latlon) for latlon in zip(*first_latlons)],
         'locations': locations,
         'zoom_level': zoom_level
     })

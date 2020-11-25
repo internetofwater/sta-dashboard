@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            map.flyTo([data.locations[0][0], data.locations[0][1]], data.zoom_level);
+            map.flyTo(data.viewLatlon, data.zoom_level);
 
 
             // Create a new MarkerClusterGroup
