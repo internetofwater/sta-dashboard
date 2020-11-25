@@ -42,6 +42,7 @@
             [{{ locations[0].latitude }} , {{ locations[0].longitude }}], {{ zoom_level }});
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            id: 'tileLayer',
             maxZoom: 19,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);

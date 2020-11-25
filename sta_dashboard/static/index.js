@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var data = JSON.parse(request.responseText);
 
+            map.eachLayer(function (layer) {
+                if (layer['options']['id'] != 'tileLayer') {
+                    layer.remove()
+                }
+            });
+
             map.flyTo([data.locations[0][0], data.locations[0][1]], data.zoom_level);
 
 
