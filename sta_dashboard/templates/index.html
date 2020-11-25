@@ -36,45 +36,21 @@
 
 <body>
     <div id="map"></div>
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
     <script>
-        // Add base layer tiles
-        var map = L.map('map').setView([{{ locations[0].latitude }} , {{ locations[0].longitude }}], {{zoom_level}});
-        
+        var map = L.map('map').setView(
+            [{{ locations[0].latitude }} , {{ locations[0].longitude }}], {{ zoom_level }});
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-        // {s}, {z}, {x} and {y} are placeholders for map tiles
-        // {x} and {y} are the x/y of where you are on the map
-        // {z} is the zoom level
-        // {s} is the subdomain of cartodb
-
-        // Create a new MarkerClusterGroup
-        var markers = L.markerClusterGroup({
-            spiderfyOnMaxZoom: false,
-            chunkedLoading: true,
-            maxZoom: 12
-        });
-
-        // Add point markers
-        var markerList = [];
-
-        {% for location in locations %}
-            var marker = L.marker(
-                [{{ location.latitude }} , {{ location.longitude }}]
-            );
-            marker.bindPopup('{{ location.description }}');
-            markerList.push(marker);
-        {% endfor %}
-
-        markers.addLayers(markerList);
-        map.addLayer(markers);
 
     </script>
 
     <div id="endpoints-select">
-        <h4>Showing {{ locations|length }} points.</h4>
-        <form id="endpoints-checkbox" method="POST" action="/">
+        <h4 id="checkbox-title">Select endpoints.</h4>
+        <form id="endpoints-checkbox">
             <input type="checkbox" name="endpoint" value="internetofwater" /> Internet of Water<br>
             <input type="checkbox" name="endpoint" value="datacove" /> datacove.eu <br>
             <input type="checkbox" name="endpoint" value="newmexicowaterdata" /> New Mexico Water Data <br>
