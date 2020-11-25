@@ -35,9 +35,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 var popUpContent = [];
                 for (var i = 0; i < row[2].length; i++) {
-                    var datastreams_name = row[2][i]['name'];
-                    var datastreams_selfLink = datastreams_name.link(row[2][i]['@iot.selfLink']);
-                    popUpContent.push(datastreams_selfLink)
+
+                    var a = document.createElement('a'); // Create anchor for link to datastreams
+                    var datastreams_text = document.createTextNode(row[2][i]['name']);
+                    a.appendChild(datastreams_text);
+                    a.title = row[2][i]['name'];
+                    a.href = row[2][i]['@iot.selfLink'];
+                    a.target = '_blank';
+
+                    popUpContent.push(a.outerHTML)
                 }
 
                 marker.bindPopup(`Datastreams: ${popUpContent.join(', ')}`);
