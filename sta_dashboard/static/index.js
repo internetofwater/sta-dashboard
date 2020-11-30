@@ -31,13 +31,13 @@ document.addEventListener('DOMContentLoaded', function () {
             var markerList = [];
 
             for (row of data.locations) {
-                var marker = L.marker([row[0], row[1]]);
+                var marker = L.marker([row.latitude, row.longitude]);
 
                 var popUpContent = [];
-                for (var i = 0; i < row[2].length; i++) {
+                for (var i = 0; i < row.datastreams.length; i++) {
 
                     var a = document.createElement('a'); // Create anchor for link to datastreams
-                    var datastreams_text = document.createTextNode(row[2][i]['name']);
+                    var datastreams_text = document.createTextNode(row.datastreams[i]['name']);
                     a.appendChild(datastreams_text);
                     a.href = row[2][i]['@iot.selfLink'];
                     a.target = '_blank';
