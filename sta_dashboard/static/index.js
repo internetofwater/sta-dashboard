@@ -31,12 +31,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var markerList = [];
 
             for (row of data.locations) {
-                var marker = L.marker([row[0], row[1]]);
+                var marker = L.marker([row.latitude, row.longitude]);
 
                 var popUpContent = [];
-                for (var i = 0; i < row[2].length; i++) {
-                    var datastreams_name = row[2][i]['name'];
-                    var datastreams_selfLink = datastreams_name.link(row[2][i]['@iot.selfLink']);
+                for (var i = 0; i < row.datastreams.length; i++) {
+                    var datastreams_name = row.datastreams[i]['name'];
+                    var datastreams_selfLink = datastreams_name.link(row.datastreams[i]['@iot.selfLink']);
                     popUpContent.push(datastreams_selfLink)
                 }
 
