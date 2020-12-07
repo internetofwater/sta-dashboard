@@ -49,15 +49,23 @@
 
     </script>
 
-    <div id="endpoints-select">
-        <h4 id="checkbox-title">Select endpoints.</h4>
-        <form id="endpoints-checkbox">
+    <div id="query-sidebar">
+        <form id="query-filters">
+            <h4 id="checkbox-title">Select endpoints:</h4>
             <input type="checkbox" name="endpoint" value="internetofwater" /> Internet of Water<br>
             <input type="checkbox" name="endpoint" value="datacove" /> datacove.eu <br>
             <input type="checkbox" name="endpoint" value="newmexicowaterdata" /> New Mexico Water Data <br>
             <input type="checkbox" name="endpoint" value="taiwan" /> Taiwan Air Quality <br>
+
+            <h4 id="date-picker-title">Select date range: <br> (UTC time)</h4>
+            <label for="start-date">Start date:</label> <br>
+            <input type="date" name="start-date" id="start-date"> <br>
+            <label for="end-date">End date:</label> <br>
+            <input type="date" name="end-date" id="end-date"> <br>
+            <br>
             <input type="submit">
         </form>
+
     </div>
 </body>
 

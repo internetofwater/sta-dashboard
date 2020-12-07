@@ -1,11 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
     
-    document.querySelector('#endpoints-checkbox').onsubmit = function () {
+    document.querySelector('#query-filters').onsubmit = function () {
 
         // Initialize new request
         const request = new XMLHttpRequest();
-        var endpoints_list = document.querySelectorAll('input[name=endpoint]:checked');
-        request.open('POST', '/show_points');
+        var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
+        var start_date = document.querySelector('input[name="start-date"]');
+        var end_date = document.querySelector('input[name="end-date"]');
+        request.open('POST', '/query_points');
 
         request.onload = function () {
 
@@ -57,13 +59,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
 
-        var data = [];
+        var endpoints = [];
         for (endpoint of endpoints_list) {
-            data.push(endpoint.value)
+            endpoints.push(endpoint.value)
         };
 
         const dataStr = new FormData();
-        dataStr.append('endpoints', JSON.stringify(data));
+        dataStr.append('endpoints', JSON.stringify(endpoints));
+        dataStr.append('startDate', JSON.stringify(start_date.value));
+        dataStr.append('endDate', JSON.stringify(end_date.value));
 
         // Send the endpoints list to server
         request.send(dataStr);
