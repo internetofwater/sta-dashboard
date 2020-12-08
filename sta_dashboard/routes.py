@@ -1,32 +1,10 @@
 import re
-from datetime import datetime as dt
 
 from flask import render_template, request, jsonify
 
 from sta_dashboard import app
 from sta_dashboard.models import Location, Thing
-
-
-def extract_date(resultTimeString):
-    # Example datetime format: '1954-09-10T12:00:00.000Z/2019-12-13T21:26:00.000Z'
-    assert len(resultTimeString) == 49
-    
-    year = [s[:10] for s in resultTimeString.split('/')]
-    startDate, endDate = year[0], year[1]
-    
-    return startDate, endDate
-
-
-def stringToDate(dateString):
-    # Example date format: '1954-09-10'
-    assert len(dateString) == 10
-    return dt.strptime(dateString, "%Y-%m-%d")
-
-
-def compare_date(dataDateTuple: tuple, queryDateTuple: tuple) -> bool:
-    dataStartDate, dataEndDate = dataDateTuple
-    queryStartDate, queryEndDate = queryDateTuple
-    return dataStartDate <= queryStartDate and dataEndDate >= queryEndDate
+from sta_dashboard.utils import *
     
 
 @app.route('/')
