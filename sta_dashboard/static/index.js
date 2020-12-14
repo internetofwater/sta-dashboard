@@ -33,21 +33,29 @@ document.addEventListener('DOMContentLoaded', function () {
             var markerList = [];
 
             for (row of data.locations) {
-                var marker = L.marker([row.latitude, row.longitude]);
+                var marker = L.marker([row[5], row[6]]);
 
-                var popUpContent = [];
-                for (var i = 0; i < row.datastreams.length; i++) {
+                // var popUpContent = [];
+                // for (var i = 0; i < row.datastreams.length; i++) {
 
-                    var a = document.createElement('a'); // Create anchor for link to datastreams
-                    var datastreams_text = document.createTextNode(row.datastreams[i]['name']);
-                    a.appendChild(datastreams_text);
-                    a.href = row.datastreams[i]['@iot.selfLink'];
-                    a.target = '_blank';
+                //     var a = document.createElement('a'); // Create anchor for link to datastreams
+                //     var datastreams_text = document.createTextNode(row[3]);
+                //     a.appendChild(datastreams_text);
+                //     a.href = row[4];
+                //     a.target = '_blank';
 
-                    popUpContent.push(a.outerHTML)
-                }
+                //     popUpContent.push(a.outerHTML)
+                // }
 
-                marker.bindPopup(`Datastreams: ${popUpContent.join(', ')}`);
+                // marker.bindPopup(`Datastreams: ${popUpContent.join(', ')}`);
+
+                // TODO: Remove duplicate locations/group datastreams by locations
+                var a = document.createElement('a'); // Create anchor for link to datastreams
+                var datastreams_text = document.createTextNode(row[3]);
+                a.appendChild(datastreams_text);
+                a.href = row[4];
+                a.target = '_blank';
+                marker.bindPopup(`Datastreams: ${a.outerHTML}`)
                 markerList.push(marker);
             };
 

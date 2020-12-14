@@ -134,6 +134,7 @@ if __name__ == '__main__':
                     phenomenonEndDate=phenomenonEndDate,
                     resultStartDate=resultStartDate,
                     resultEndDate=resultEndDate,
+                    selfLink=ds['@iot.selfLink'],
                     thingId=new_thing_row.id
                 )
                 db.session.add(new_datastream_row)
