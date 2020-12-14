@@ -45,11 +45,15 @@ def query_points():
                         Datastream.resultEndDate <= queryEndDate,
                         Datastream.endpoint == endpoint
                     ).all()
-        locations.extend(query_result)
-        first_latlons.append(query_result[0][-2:])
         # pdb.set_trace()
 
+        locations.extend(query_result)
+        if query_result:
+            first_latlons.append(query_result[0][-2:])
+
     zoom_level = 3 if len(endpoints) > 1 else 5
+    if not first_latlons:
+        first_latlons = [(35.99,  -78.90)]
     
     return jsonify({
         'viewLatlon': [sum(latlon) / len(latlon) for latlon in zip(*first_latlons)],
