@@ -28,11 +28,15 @@ def query_points():
     locations = []
     first_latlons = [] # save first latlon pair at each endpoint, use the average pair as default view latlon
     
+    query_result_keys = [
+        'phenomenonStartDate', 'phenomenonEndDate', 'endpoint', 'name', 'selfLink', 'latitude', 'longitude'
+    ]
+    
     for endpoint in endpoints:
         
         query_result = Datastream.query.with_entities(
-            Datastream.resultStartDate, 
-            Datastream.resultEndDate, 
+            Datastream.phenomenonStartDate,
+            Datastream.phenomenonEndDate,
             Datastream.endpoint,
             Datastream.name,
             Datastream.selfLink, 
@@ -41,15 +45,17 @@ def query_points():
             ).\
                 join(Thing, Datastream.thingId==Thing.id).\
                     filter(
-                        Datastream.resultStartDate >= queryStartDate,
-                        Datastream.resultEndDate <= queryEndDate,
+                        Datastream.phenomenonStartDate >= queryStartDate,
+                        Datastream.phenomenonEndDate <= queryEndDate,
                         Datastream.endpoint == endpoint
                     ).all()
-        # pdb.set_trace()
-
-        locations.extend(query_result)
+        
         if query_result:
-            first_latlons.append(query_result[0][-2:])
+            first_latlons.append(query_result[0][-2:]) # Get the first lat/lon pair as the default view point
+            
+        locations.extend(
+            [dict(zip(query_result_keys, query_item)) for query_item in query_result]
+        )
 
     zoom_level = 3 if len(endpoints) > 1 else 5
     if not first_latlons:

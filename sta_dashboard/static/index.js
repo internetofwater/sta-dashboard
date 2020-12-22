@@ -33,27 +33,13 @@ document.addEventListener('DOMContentLoaded', function () {
             var markerList = [];
 
             for (row of data.locations) {
-                var marker = L.marker([row[5], row[6]]);
-
-                // var popUpContent = [];
-                // for (var i = 0; i < row.datastreams.length; i++) {
-
-                //     var a = document.createElement('a'); // Create anchor for link to datastreams
-                //     var datastreams_text = document.createTextNode(row[3]);
-                //     a.appendChild(datastreams_text);
-                //     a.href = row[4];
-                //     a.target = '_blank';
-
-                //     popUpContent.push(a.outerHTML)
-                // }
-
-                // marker.bindPopup(`Datastreams: ${popUpContent.join(', ')}`);
+                var marker = L.marker([row.latitude, row.longitude]);
 
                 // TODO: Remove duplicate locations/group datastreams by locations
                 var a = document.createElement('a'); // Create anchor for link to datastreams
-                var datastreams_text = document.createTextNode(row[3]);
+                var datastreams_text = document.createTextNode(row.name);
                 a.appendChild(datastreams_text);
-                a.href = row[4];
+                a.href = row.selfLink;
                 a.target = '_blank';
                 marker.bindPopup(`Datastreams: ${a.outerHTML}`)
                 markerList.push(marker);
