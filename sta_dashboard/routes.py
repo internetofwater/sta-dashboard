@@ -74,6 +74,9 @@ def query_points():
         for thing_id in thing_id_list:
             group_df = query_df[query_df['thingId'] == thing_id]
             group_dict = group_df[query_result_keys[:5]].to_dict()
+            for dict_key in list(group_dict.keys()):
+                group_dict[dict_key] = list(group_dict[dict_key].values())
+                
             group_result = {
                 'latitude': group_df['latitude'].iloc[0],
                 'longitude': group_df['longitude'].iloc[0],
