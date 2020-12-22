@@ -44,12 +44,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 var marker = L.marker([row.latitude, row.longitude]);
 
                 // TODO: Remove duplicate locations/group datastreams by locations
-                var a = document.createElement('a'); // Create anchor for link to datastreams
-                var datastreams_text = document.createTextNode(row.name);
-                a.appendChild(datastreams_text);
-                a.href = row.selfLink;
-                a.target = '_blank';
-                marker.bindPopup(`Datastreams: ${a.outerHTML}`)
+                var popUpContent = [];
+                for (var i = 0; i < row.length; i++) {
+                    var a = document.createElement('a'); // Create anchor for link to datastreams
+                    var datastreams_text = document.createTextNode(row.datastreams.name[i]);
+                    a.appendChild(datastreams_text);
+                    a.href = row.datastreams.selfLink[i];
+                    a.target = '_blank';
+                    popUpContent.push(a.outerHTML);
+                };
+                marker.bindPopup(`Datastreams: ${popUpContent.join(', ')}`)
                 markerList.push(marker);
             };
 

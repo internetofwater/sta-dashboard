@@ -4,6 +4,7 @@ import pdb
 
 from flask import render_template, request, jsonify
 from sqlalchemy import create_engine
+import pandas as pd
 
 from sta_dashboard import app
 from sta_dashboard.models import Thing, Datastream
@@ -41,7 +42,7 @@ def query_points():
     first_latlons = [] # save first latlon pair at each endpoint, use the average pair as default view latlon
     
     query_result_keys = [
-        'phenomenonStartDate', 'phenomenonEndDate', 'endpoint', 'name', 'selfLink', 'latitude', 'longitude'
+        'phenomenonStartDate', 'phenomenonEndDate', 'endpoint', 'name', 'selfLink', 'thingId', 'latitude', 'longitude'
     ]
     
     for endpoint in endpoints:
@@ -51,7 +52,8 @@ def query_points():
             Datastream.phenomenonEndDate,
             Datastream.endpoint,
             Datastream.name,
-            Datastream.selfLink, 
+            Datastream.selfLink,
+            Datastream.thingId,
             Thing.latitude, 
             Thing.longitude
             ).\
@@ -60,14 +62,27 @@ def query_points():
                         Datastream.phenomenonStartDate >= queryStartDate,
                         Datastream.phenomenonEndDate <= queryEndDate,
                         Datastream.endpoint == endpoint
-                    ).all()
+                    ).\
+                        all()
         
         if query_result:
             first_latlons.append(query_result[0][-2:]) # Get the first lat/lon pair as the default view point
             
-        locations.extend(
-            [dict(zip(query_result_keys, query_item)) for query_item in query_result]
-        )
+        query_df = pd.DataFrame(query_result, columns=query_result_keys)
+
+        thing_id_list = query_df['thingId'].unique()
+        for thing_id in thing_id_list:
+            group_df = query_df[query_df['thingId'] == thing_id]
+            group_dict = group_df[query_result_keys[:5]].to_dict()
+            group_result = {
+                'latitude': group_df['latitude'].iloc[0],
+                'longitude': group_df['longitude'].iloc[0],
+                'thingId': group_df['thingId'].iloc[0],
+                'length': len(group_dict['name']),
+                'datastreams': group_dict
+            }
+
+            locations.append(group_result)
 
     zoom_level = 3 if len(endpoints) > 1 else 5
     if not first_latlons:
