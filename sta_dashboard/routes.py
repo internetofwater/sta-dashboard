@@ -12,9 +12,9 @@ from sta_dashboard.utils import *
 
 @app.route('/')
 def index():
-    locations = Thing.query.with_entities(Thing.latitude, Thing.longitude).filter(
-        Thing.endpoint == 'internetofwater').all()
-    return render_template('index.html', locations=locations, zoom_level=5)
+    # locations = Thing.query.with_entities(Thing.latitude, Thing.longitude).filter(
+    #     Thing.endpoint == 'internetofwater').all()
+    return render_template('index.html')
 
 
 @app.route('/query_points', methods=['POST'])
@@ -23,8 +23,20 @@ def query_points():
     # regex to extract endpoint names from strings
     endpoints = re.findall(r'\w+', request.form['endpoints']) #TODO: support names that contain non-letter chars
     # TODO: use regex to extract datetime string
-    queryStartDate = datetime.strptime(request.form['startDate'][1:-1], '%Y-%m-%d')
-    queryEndDate = datetime.strptime(request.form['endDate'][1:-1], '%Y-%m-%d')
+    if len(request.form['startDate'][1:-1]) == 0:
+        queryStartDate = datetime.min
+    else:
+        queryStartDate = datetime.strptime(
+            request.form['startDate'][1:-1], '%Y-%m-%d')
+        
+    if len(request.form['endDate'][1:-1]) == 0:
+        queryEndDate = datetime.max
+    else:
+        queryEndDate = datetime.strptime(
+            request.form['endDate'][1:-1], '%Y-%m-%d')
+    
+    # pdb.set_trace()
+    
     locations = []
     first_latlons = [] # save first latlon pair at each endpoint, use the average pair as default view latlon
     

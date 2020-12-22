@@ -7,6 +7,14 @@ document.addEventListener('DOMContentLoaded', function () {
         var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
         var start_date = document.querySelector('input[name="start-date"]');
         var end_date = document.querySelector('input[name="end-date"]');
+
+        if (start_date.value.length > 0 && end_date.value.length > 0) {
+            if (start_date.value >= end_date.value) {
+                window.alert('Invalid date range: end date must be after start date');
+                window.stop();
+            }
+        }
+
         request.open('POST', '/query_points');
 
         request.onload = function () {

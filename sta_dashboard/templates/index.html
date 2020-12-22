@@ -38,8 +38,10 @@
     <div id="map"></div>
     <script src="{{ url_for('static', filename='index.js') }}"></script>
     <script>
-        var map = L.map('map').setView(
-            [{{ locations[0].latitude }} , {{ locations[0].longitude }}], {{ zoom_level }});
+        var map = L.map('map', {
+            center: [35.99,  -78.90],
+            zoom: 5
+        });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             id: 'tileLayer',
