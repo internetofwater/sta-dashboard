@@ -2,7 +2,8 @@ import requests
 import time
 
 from sta_dashboard import db
-from sta_dashboard.models import Location, Thing
+from sta_dashboard.models import Thing, Datastream
+from sta_dashboard.utils import *
 
 ENDPOINTS = {
     'internetofwater': 'https://sta-demo.internetofwater.dev/api/v1.1',
@@ -79,45 +80,65 @@ if __name__ == '__main__':
     db.drop_all()
     db.create_all()
 
-    # for endpoint in list(ENDPOINTS.keys()):
-    #     print('{}...'.format(endpoint), end='')
-    #     tmp = Endpoint(endpoint)
-    #     locations_list = tmp.get_locations()
-
-    #     for location in locations_list:
-    #         location = Location(
-    #             endpoint=endpoint,
-    #             name=location['name'],
-    #             description=location['description'],
-    #             # properties=pickle.dumps(location['properties']),
-    #             encodingtype=location['encodingType'],
-    #             longitude=location['location']['coordinates'][0],
-    #             latitude=location['location']['coordinates'][1],
-    #             iotid=location['@iot.id']
-    #         )
-    #         db.session.add(location)
-        
-    #     print('finished')
-        
-    # db.session.commit()
-    
     for endpoint in list(ENDPOINTS.keys()):
         print('{}...'.format(endpoint), end='')
         start_timestamp = time.time()
         edp = Endpoint(endpoint)
         cached_things = edp.cache_from_things()
 
+        # Add thing rows to get locations
         for thing in cached_things:
-            new_thing = Thing(
+            
+            new_thing_row = Thing(
+                id='@'.join([str(thing[0]), endpoint]),
                 endpoint=endpoint,
                 iotid=thing[0],
                 name=thing[1],
                 description=thing[2],
                 latitude=thing[3][0],
-                longitude=thing[3][1],
-                datastreams=thing[-1],
+                longitude=thing[3][1]
             )
-            db.session.add(new_thing)
+            db.session.add(new_thing_row)
+
+            # Add datastream rows
+            datastreams = thing[-1]
+            for ds in datastreams:
+                
+                # 'phenomenonTime' and 'resultTime' are optional properties
+                # sometimes a datasream has a 'phenomenonTime' or 'resultTime' property but is None
+                if 'phenomenonTime' in ds.keys() and ds['phenomenonTime']:
+                    phenomenonStartDate, phenomenonEndDate = extract_date(
+                        ds['phenomenonTime'])
+                    # else:
+                    #     phenomenonStartDate, phenomenonEndDate = None, None
+                else:
+                    phenomenonStartDate, phenomenonEndDate = None, None
+                    
+                if 'resultTime' in ds.keys() and ds['resultTime']:
+                    resultStartDate, resultEndDate = extract_date(
+                        ds['resultTime'])
+                    # else:
+                    #     resultStartDate, resultEndDate = None, None
+                else:
+                    resultStartDate, resultEndDate = None, None
+                
+                new_datastream_row = Datastream(
+                    id='@'.join([str(ds['@iot.id']), endpoint]),
+                    endpoint=endpoint,
+                    iotid=ds['@iot.id'],
+                    name=ds['name'],
+                    description=ds['description'],
+                    observationType=ds['observationType'],
+                    unitOfMeasurement=ds['unitOfMeasurement'],
+                    phenomenonStartDate=phenomenonStartDate,
+                    phenomenonEndDate=phenomenonEndDate,
+                    resultStartDate=resultStartDate,
+                    resultEndDate=resultEndDate,
+                    selfLink=ds['@iot.selfLink'],
+                    thingId=new_thing_row.id
+                )
+                db.session.add(new_datastream_row)
+            
 
         print('finished within {:.2f} seconds'.format(time.time() - start_timestamp))
 

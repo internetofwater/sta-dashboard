@@ -1,11 +1,21 @@
 document.addEventListener('DOMContentLoaded', function () {
     
-    document.querySelector('#endpoints-checkbox').onsubmit = function () {
+    document.querySelector('#query-filters').onsubmit = function () {
 
         // Initialize new request
         const request = new XMLHttpRequest();
-        var endpoints_list = document.querySelectorAll('input[name=endpoint]:checked');
-        request.open('POST', '/show_points');
+        var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
+        var start_date = document.querySelector('input[name="start-date"]');
+        var end_date = document.querySelector('input[name="end-date"]');
+
+        if (start_date.value.length > 0 && end_date.value.length > 0) {
+            if (start_date.value >= end_date.value) {
+                window.alert('Invalid date range: end date must be after start date');
+                window.stop();
+            }
+        }
+
+        request.open('POST', '/query_points');
 
         request.onload = function () {
 
@@ -33,19 +43,17 @@ document.addEventListener('DOMContentLoaded', function () {
             for (row of data.locations) {
                 var marker = L.marker([row.latitude, row.longitude]);
 
+                // TODO: Remove duplicate locations/group datastreams by locations
                 var popUpContent = [];
-                for (var i = 0; i < row.datastreams.length; i++) {
-
+                for (var i = 0; i < row.length; i++) {
                     var a = document.createElement('a'); // Create anchor for link to datastreams
-                    var datastreams_text = document.createTextNode(row.datastreams[i]['name']);
+                    var datastreams_text = document.createTextNode(row.datastreams.name[i]);
                     a.appendChild(datastreams_text);
-                    a.href = row[2][i]['@iot.selfLink'];
+                    a.href = row.datastreams.selfLink[i];
                     a.target = '_blank';
-
-                    popUpContent.push(a.outerHTML)
-                }
-
-                marker.bindPopup(`Datastreams: ${popUpContent.join(', ')}`);
+                    popUpContent.push(a.outerHTML);
+                };
+                marker.bindPopup(`Datastreams: ${popUpContent.join(', ')}`)
                 markerList.push(marker);
             };
 
@@ -57,13 +65,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
 
-        var data = [];
+        var endpoints = [];
         for (endpoint of endpoints_list) {
-            data.push(endpoint.value)
+            endpoints.push(endpoint.value)
         };
 
         const dataStr = new FormData();
-        dataStr.append('endpoints', JSON.stringify(data));
+        dataStr.append('endpoints', JSON.stringify(endpoints));
+        dataStr.append('startDate', JSON.stringify(start_date.value));
+        dataStr.append('endDate', JSON.stringify(end_date.value));
 
         // Send the endpoints list to server
         request.send(dataStr);
