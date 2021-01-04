@@ -24,32 +24,54 @@
         crossorigin=""></script>
 
     <style>
-        #map {
+        .map-container {
             position: absolute;
             top: 0;
             left: 200px;
             bottom: 0;
             right: 0;
         }
+
+        #modal.map-container {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 0px;
+            width: 5%;
+            height: 5%;
+            display: none;
+            z-index:2;
+            text-align: center;
+        }
+
+        #map.map-container {
+            z-index:1
+        }
     </style>
 </head>
 
 <body>
-    <div id="map"></div>
-    <script src="{{ url_for('static', filename='index.js') }}"></script>
-    <script>
-        var map = L.map('map', {
-            center: [35.99,  -78.90],
-            zoom: 5
-        });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            id: 'tileLayer',
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+    <div id="modal" class="map-container">
+        <p>Loading...</p>
+    </div>
 
-    </script>
+    <div id="map" class="map-container">
+        <script src="{{ url_for('static', filename='index.js') }}"></script>
+        <script>
+            var map = L.map('map', {
+                center: [35.99,  -78.90],
+                zoom: 5
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                id: 'tileLayer',
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+        </script>
+    </div>
 
     <div id="query-sidebar">
         <form id="query-filters">

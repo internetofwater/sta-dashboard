@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', function () {
+
+    var loader = document.getElementById('modal');
     
     document.querySelector('#query-filters').onsubmit = function () {
+
+        loader.style.display = "block";
 
         // Initialize new request
         const request = new XMLHttpRequest();
@@ -62,6 +66,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const checckbox_title = `${markerList.length} locations found.`;
             document.querySelector('#checkbox-title').innerHTML = checckbox_title;
+            loader.style.display = 'none';
+            window.alert(checckbox_title);
 
         }
 
