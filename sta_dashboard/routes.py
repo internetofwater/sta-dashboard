@@ -1,9 +1,8 @@
 import re
 from datetime import datetime
-import pdb
 
 from flask import render_template, request, jsonify
-from sqlalchemy import create_engine
+from sqlalchemy import or_, and_
 import pandas as pd
 
 from sta_dashboard import app
@@ -59,12 +58,28 @@ def query_points():
             ).\
                 join(Thing, Datastream.thingId==Thing.id).\
                     filter(
-                        Datastream.phenomenonStartDate >= queryStartDate,
-                        Datastream.phenomenonEndDate <= queryEndDate,
+                        or_(
+                            and_(
+                                Datastream.phenomenonStartDate <= queryEndDate,
+                                Datastream.phenomenonStartDate >= queryStartDate
+                            ),
+                            and_(
+                                Datastream.phenomenonEndDate >= queryStartDate,
+                                Datastream.phenomenonEndDate <= queryEndDate
+                            ),
+                            and_(
+                                Datastream.phenomenonStartDate >= queryStartDate,
+                                Datastream.phenomenonEndDate <= queryEndDate
+                            ),
+                            and_(
+                                Datastream.phenomenonStartDate <= queryStartDate,
+                                Datastream.phenomenonEndDate >= queryEndDate
+                            )
+                        ),
                         Datastream.endpoint == endpoint
                     ).\
                         all()
-        
+
         if query_result:
             first_latlons.append(query_result[0][-2:]) # Get the first lat/lon pair as the default view point
             
