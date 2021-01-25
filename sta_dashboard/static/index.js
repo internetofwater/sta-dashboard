@@ -1,13 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    var loader = document.getElementById('modal');
+    var loader = document.getElementById('map-loader');
     
     document.querySelector('#query-filters').onsubmit = function () {
 
         loader.style.display = "block";
 
         // Initialize new request
-        const request = new XMLHttpRequest();
+        const query_request = new XMLHttpRequest();
+        const visualize_request = new XMLHttpRequest();
+
         var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
         var start_date = document.querySelector('input[name="start-date"]');
         var end_date = document.querySelector('input[name="end-date"]');
@@ -16,19 +18,18 @@ document.addEventListener('DOMContentLoaded', function () {
             if (start_date.value >= end_date.value) {
                 window.alert('Invalid date range: end date must be after start date');
                 window.stop();
-            }
-        }
+            };
+        };
 
-        request.open('POST', '/query_points');
+        query_request.open('POST', '/query_points');
+        query_request.onload = function () {
 
-        request.onload = function () {
-
-            var data = JSON.parse(request.responseText);
+            var data = JSON.parse(query_request.responseText);
 
             map.eachLayer(function (layer) {
                 if (layer['options']['id'] != 'tileLayer') {
                     layer.remove()
-                }
+                };
             });
 
             map.flyTo(data.viewLatlon, data.zoom_level);
@@ -45,19 +46,68 @@ document.addEventListener('DOMContentLoaded', function () {
             var markerList = [];
 
             for (row of data.locations) {
-                var marker = L.marker([row.latitude, row.longitude]);
+                var marker = L.marker([row.latitude, row.longitude]).on('click', markerOnClick);
 
-                // TODO: Remove duplicate locations/group datastreams by locations
-                var popUpContent = [];
-                for (var i = 0; i < row.length; i++) {
-                    var a = document.createElement('a'); // Create anchor for link to datastreams
-                    var datastreams_text = document.createTextNode(row.datastreams.name[i]);
-                    a.appendChild(datastreams_text);
-                    a.href = row.datastreams.selfLink[i];
-                    a.target = '_blank';
-                    popUpContent.push(a.outerHTML);
+                function markerOnClick(e) {
+                    visualize_request.open('POST', '/visualize_observations');
+                    // display visualization modal
+
+
+                    // construct a form of data to send to server
+                    const visualizeDataStr = new FormData();
+                    visualizeDataStr.append('startDate', JSON.stringify(start_date.value));
+                    visualizeDataStr.append('endDate', JSON.stringify(end_date.value));
+                    visualizeDataStr.append('datastreamNames', JSON.stringify(row.datastreams.name));
+                    visualizeDataStr.append('datastreamSelfLinks', JSON.stringify(row.datastreams.selfLink))
+                    visualize_request.send(visualizeDataStr);
+
+                    // plot the data with chart.js
+                    visualize_request.onload = function () {
+                        var observations = JSON.parse(visualize_request.responseText);
+                        var ctx = document.getElementById('scatterChart')
+                        var chartModal = document.getElementById('visualizationModal')
+
+                        var scatterChart = new Chart(ctx, {
+                            type: 'scatter',
+                            data: {
+                                datasets: observations['value'],
+                                options: {
+                                    tooltips: {
+                                        callbacks: {
+                                            title(datasets) {
+                                                var time = new Date(datasets[0].xLabel * 1000);
+                                                return (time.getMonth() + 1) + '/' + time.getDate() + ' ' + time.getHours();
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        xAxes: [
+                                            {
+                                                type: 'linear',
+                                                position: 'bottom',
+                                                ticks: {
+                                                    callback(value) {
+                                                        var time = new Date(value * 1000);
+                                                        return (time.getMonth() + 1) + '/' + time.getDate() + ' ' + time.getHours();
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        });
+                        chartModal.style.display = 'block';
+
+                        window.onclick = function (event) {
+                            if (event.target != chartModal) {
+                                chartModal.style.display = 'none';
+                            };
+                        };
+                    };
                 };
-                marker.bindPopup(`Datastreams: ${popUpContent.join(', ')}`)
+
+
                 markerList.push(marker);
             };
 
@@ -69,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loader.style.display = 'none';
             window.alert(checckbox_title);
 
-        }
+        };
 
         var endpoints = [];
         for (endpoint of endpoints_list) {
@@ -82,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dataStr.append('endDate', JSON.stringify(end_date.value));
 
         // Send the endpoints list to server
-        request.send(dataStr);
+        query_request.send(dataStr);
         return false;
 
     }

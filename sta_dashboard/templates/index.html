@@ -23,72 +23,64 @@
         integrity="sha512-MQlyPV+ol2lp4KodaU/Xmrn+txc1TP15pOBF/2Sfre7MRsA/pB4Vy58bEqe9u7a7DczMLtU5wT8n7OblJepKbg=="
         crossorigin=""></script>
 
-    <style>
-        .map-container {
-            position: absolute;
-            top: 0;
-            left: 200px;
-            bottom: 0;
-            right: 0;
-        }
+    <!-- Load Chart.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" 
+        integrity="sha512-d9xgZrVZpmmQlfonhQUvTR7lMPtO7NkZMkA0ABN3PHCbKA5nqylQ/yWlFAyY6hYgdF1Qh6nYiuADWwKB4C2WSw==" 
+        crossorigin="anonymous"></script>
 
-        #modal.map-container {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 0px;
-            width: 5%;
-            height: 5%;
-            display: none;
-            z-index:2;
-            text-align: center;
-        }
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css')}}" />
 
-        #map.map-container {
-            z-index:1
-        }
-    </style>
 </head>
 
 <body>
 
-    <div id="modal" class="map-container">
-        <p>Loading...</p>
-    </div>
+    <div class="wrapper" style="width: 100%; height: 100%;">
+    
+        <div id="query-sidebar">
+            <form id="query-filters">
+                <h4 id="checkbox-title">Select endpoints:</h4>
+                <input type="checkbox" name="endpoint" value="internetofwater" /> Internet of Water<br>
+                <input type="checkbox" name="endpoint" value="datacove" /> datacove.eu <br>
+                <input type="checkbox" name="endpoint" value="newmexicowaterdata" /> New Mexico Water Data <br>
+                <input type="checkbox" name="endpoint" value="taiwan" /> Taiwan Air Quality <br>
 
-    <div id="map" class="map-container">
-        <script src="{{ url_for('static', filename='index.js') }}"></script>
-        <script>
-            var map = L.map('map', {
-                center: [35.99,  -78.90],
-                zoom: 5
-            });
+                <h4 id="date-picker-title">Select date range: <br> (UTC time)</h4>
+                <label for="start-date">Start date:</label> <br>
+                <input type="date" name="start-date" id="start-date"> <br>
+                <label for="end-date">End date:</label> <br>
+                <input type="date" name="end-date" id="end-date"> <br>
+                <br>
+                <input type="submit">
+            </form>
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                id: 'tileLayer',
-                maxZoom: 19,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+        </div>
 
-        </script>
-    </div>
+        <div id="map-wrapper" class="map-display-area">
+            <div id="map-loader" class="map-display-area">
+                <p>Loading...</p>
+            </div>
 
-    <div id="query-sidebar">
-        <form id="query-filters">
-            <h4 id="checkbox-title">Select endpoints:</h4>
-            <input type="checkbox" name="endpoint" value="internetofwater" /> Internet of Water<br>
-            <input type="checkbox" name="endpoint" value="datacove" /> datacove.eu <br>
-            <input type="checkbox" name="endpoint" value="newmexicowaterdata" /> New Mexico Water Data <br>
-            <input type="checkbox" name="endpoint" value="taiwan" /> Taiwan Air Quality <br>
+            <div id="visualizationModal" class="map-display-area">
+                <canvas id="scatterChart" style="width: 600px; height: 400px;"></canvas>
+            </div>
 
-            <h4 id="date-picker-title">Select date range: <br> (UTC time)</h4>
-            <label for="start-date">Start date:</label> <br>
-            <input type="date" name="start-date" id="start-date"> <br>
-            <label for="end-date">End date:</label> <br>
-            <input type="date" name="end-date" id="end-date"> <br>
-            <br>
-            <input type="submit">
-        </form>
+            <div id="map" class="map-display-area">
+                <script src="{{ url_for('static', filename='index.js') }}"></script>
+                <script>
+                    var map = L.map('map', {
+                        center: [35.99,  -78.90],
+                        zoom: 5
+                    });
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        id: 'tileLayer',
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    }).addTo(map);
+
+                </script>
+            </div>
+        </div>
 
     </div>
 </body>

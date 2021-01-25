@@ -1,5 +1,7 @@
 import re
 from datetime import datetime
+import requests
+import pdb
 
 from flask import render_template, request, jsonify
 from sqlalchemy import or_, and_
@@ -7,7 +9,7 @@ import pandas as pd
 
 from sta_dashboard import app
 from sta_dashboard.models import Thing, Datastream
-from sta_dashboard.utils import *
+from sta_dashboard.utils import extract_date
     
 
 @app.route('/')
@@ -23,19 +25,9 @@ def query_points():
     # regex to extract endpoint names from strings
     endpoints = re.findall(r'\w+', request.form['endpoints']) #TODO: support names that contain non-letter chars
     # TODO: use regex to extract datetime string
-    if len(request.form['startDate'][1:-1]) == 0:
-        queryStartDate = datetime.min
-    else:
-        queryStartDate = datetime.strptime(
-            request.form['startDate'][1:-1], '%Y-%m-%d')
-        
-    if len(request.form['endDate'][1:-1]) == 0:
-        queryEndDate = datetime.max
-    else:
-        queryEndDate = datetime.strptime(
-            request.form['endDate'][1:-1], '%Y-%m-%d')
     
-    # pdb.set_trace()
+    queryStartDate, queryEndDate = \
+        extract_date(request.form['startDate'], request.form['endDate'])
     
     locations = []
     first_latlons = [] # save first latlon pair at each endpoint, use the average pair as default view latlon
@@ -43,7 +35,6 @@ def query_points():
     query_result_keys = [
         'phenomenonStartDate', 'phenomenonEndDate', 'endpoint', 'name', 'selfLink', 'thingId', 'latitude', 'longitude'
     ]
-    
     for endpoint in endpoints:
         
         query_result = Datastream.query.with_entities(
@@ -110,4 +101,62 @@ def query_points():
         'viewLatlon': [sum(latlon) / len(latlon) for latlon in zip(*first_latlons)],
         'locations': locations,
         'zoom_level': zoom_level
+    })
+
+
+@app.route('/visualize_observations', methods=['POST'])
+def visualize_observations():
+    datastreamNames = request.form['datastreamNames'][1:-1].split(',')
+    datastreamSelfLinks = request.form['datastreamSelfLinks'][1:-1].split(',')
+    queryStartDate, queryEndDate = \
+        extract_date(request.form['startDate'], request.form['endDate'])
+        
+    def makeAPICallUrl(selfLink, queryStartDate, queryEndDate):
+        
+        startDateISO = queryStartDate.isoformat() + 'Z'
+        endDateISO = queryEndDate.isoformat() + 'Z'
+        
+        url = '&$'.join([
+            selfLink + r'/Observations?$orderby=phenomenonTime asc',
+            r'expand=Datastream',
+            r'resultFormat=dataArray'
+        ])
+        
+        if queryStartDate != datetime.min and queryEndDate != datetime.max:
+            url += \
+                r'&$filter=phenomenonTime ge ' + startDateISO + \
+                    r' and ' + r'phenomenonTime le ' + endDateISO
+        elif queryStartDate == datetime.min and queryEndDate != datetime.max:
+            url += \
+                r'&$filter=phenomenonTime le ' + endDateISO
+        elif queryStartDate != datetime.min and queryEndDate == datetime.max:
+            url += \
+                r'&$filter=phenomenonTime ge ' + startDateISO
+        return url
+    
+    output_data = []
+    for name, selfLink in zip(datastreamNames, datastreamSelfLinks):
+        dataset = {}
+        points = []
+        dataset['label'] = name[1:-1]
+
+        apiCallUrl = makeAPICallUrl(
+            selfLink[1:-1], queryStartDate, queryEndDate)
+        resp = requests.get(apiCallUrl)
+
+        values = resp.json()['value'][0]
+        values_df = pd.DataFrame(values['dataArray'], columns=values['components'])
+        for _, row in values_df.iterrows():
+            points.append(
+                {
+                    'x': datetime.strptime(
+                        row['phenomenonTime'], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp(),
+                    'y': row['result']
+                }
+            )
+        dataset['data'] = points
+        output_data.append(dataset)
+
+    return jsonify({
+        'value': output_data
     })
