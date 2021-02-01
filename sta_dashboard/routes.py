@@ -90,16 +90,36 @@ def query_points():
     })
 
 
+@app.route('/show_available_datastreams', methods=['POST'])
+def select_datastreams():
+    thingId = request.form['thingId'][1:-1]
+    query_result = Datastream.query.with_entities(
+        Datastream.name
+    ).\
+        filter(Datastream.thingId == thingId).\
+        all()
+    
+    available_ds = list(set([ds for qr in query_result for ds in qr]))
+    
+    return jsonify({
+        'availableDatastreams': available_ds
+    })
+
+
 @app.route('/visualize_observations', methods=['POST'])
 def visualize_observations():
-    
     thingId = request.form['thingId'][1:-1]
+    dsList = request.form['dsList'][1:-1].split(',')
+
     query_result = Datastream.query.with_entities(
         Datastream.name,
         Datastream.selfLink
     ).\
-        filter(Datastream.thingId == thingId).\
-            all()
+        filter(
+            Datastream.thingId == thingId,
+            Datastream.name.in_(dsList)
+            ).\
+                all()
 
     queryStartDate, queryEndDate = \
         extract_date(request.form['startDate'], request.form['endDate'])
