@@ -70,33 +70,19 @@ def query_points():
                         Datastream.endpoint == endpoint
                     ).\
                         all()
-
         if query_result:
             first_latlons.append(query_result[0][-2:]) # Get the first lat/lon pair as the default view point
             
         query_df = pd.DataFrame(query_result, columns=query_result_keys)
-
-        thing_id_list = query_df['thingId'].unique()
-        for thing_id in thing_id_list:
-            group_df = query_df[query_df['thingId'] == thing_id]
-            group_dict = group_df[query_result_keys[:5]].to_dict()
-            for dict_key in list(group_dict.keys()):
-                group_dict[dict_key] = list(group_dict[dict_key].values())
-                
-            group_result = {
-                'latitude': group_df['latitude'].iloc[0],
-                'longitude': group_df['longitude'].iloc[0],
-                'thingId': group_df['thingId'].iloc[0],
-                'length': len(group_dict['name']),
-                'datastreams': group_dict
-            }
-
-            locations.append(group_result)
+        
+        unique_locations = query_df.drop_duplicates(
+            'thingId')[['thingId', 'latitude', 'longitude']]
+        locations.extend(list(unique_locations.T.to_dict().values()))
 
     zoom_level = 3 if len(endpoints) > 1 else 5
     if not first_latlons:
         first_latlons = [(35.99,  -78.90)]
-    
+
     return jsonify({
         'viewLatlon': [sum(latlon) / len(latlon) for latlon in zip(*first_latlons)],
         'locations': locations,
@@ -106,8 +92,15 @@ def query_points():
 
 @app.route('/visualize_observations', methods=['POST'])
 def visualize_observations():
-    datastreamNames = request.form['datastreamNames'][1:-1].split(',')
-    datastreamSelfLinks = request.form['datastreamSelfLinks'][1:-1].split(',')
+    
+    thingId = request.form['thingId'][1:-1]
+    query_result = Datastream.query.with_entities(
+        Datastream.name,
+        Datastream.selfLink
+    ).\
+        filter(Datastream.thingId == thingId).\
+            all()
+
     queryStartDate, queryEndDate = \
         extract_date(request.form['startDate'], request.form['endDate'])
         
@@ -135,13 +128,13 @@ def visualize_observations():
         return url
     
     output_data = []
-    for name, selfLink in zip(datastreamNames, datastreamSelfLinks):
+    for name, selfLink in query_result:
         dataset = {}
         points = []
         dataset['label'] = name[1:-1]
 
         apiCallUrl = makeAPICallUrl(
-            selfLink[1:-1], queryStartDate, queryEndDate)
+            selfLink, queryStartDate, queryEndDate)
         resp = requests.get(apiCallUrl)
 
         values = resp.json()['value'][0]

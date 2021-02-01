@@ -57,8 +57,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     const visualizeDataStr = new FormData();
                     visualizeDataStr.append('startDate', JSON.stringify(start_date.value));
                     visualizeDataStr.append('endDate', JSON.stringify(end_date.value));
-                    visualizeDataStr.append('datastreamNames', JSON.stringify(row.datastreams.name));
-                    visualizeDataStr.append('datastreamSelfLinks', JSON.stringify(row.datastreams.selfLink))
+                    visualizeDataStr.append('thingId', JSON.stringify(row.thingId));
+                    // visualizeDataStr.append('datastreamNames', JSON.stringify(row.datastreams.name));
+                    // visualizeDataStr.append('datastreamSelfLinks', JSON.stringify(row.datastreams.selfLink))
                     visualize_request.send(visualizeDataStr);
 
                     // plot the data with chart.js
