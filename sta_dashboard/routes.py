@@ -123,7 +123,7 @@ def visualize_observations():
 
     queryStartDate, queryEndDate = \
         extract_date(request.form['startDate'], request.form['endDate'])
-    
+    print(thingId, dsList)
     def makeAPICallUrl(selfLink, queryStartDate, queryEndDate):
         
         startDateISO = queryStartDate.isoformat() + 'Z'

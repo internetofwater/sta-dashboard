@@ -47,9 +47,11 @@ document.addEventListener('DOMContentLoaded', function () {
             var markerList = [];
 
             for (row of data.locations) {
-                var marker = L.marker([row.latitude, row.longitude]).on('click', markerOnClick);
+                var marker = L.marker([row.latitude, row.longitude], {title: row.thingId}).on('click', markerOnClick);
 
                 function markerOnClick(e) {
+                    var thingId = e.target.options.title
+
                     var chartModal = document.getElementById('visualizationModal');
                     var span = document.getElementsByClassName("close")[0];
                     var canvasDiv = document.getElementById('canvasDiv');
@@ -58,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     ds_request.open('POST', '/show_available_datastreams');
 
                     const dsDataStr = new FormData();
-                    dsDataStr.append('thingId', JSON.stringify(row.thingId));
+                    dsDataStr.append('thingId', JSON.stringify(thingId));
                     ds_request.send(dsDataStr);
                     ds_request.onload = function () {
 
@@ -84,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         submitButton.onclick = function () {
 
+                            canvasDiv.innerHTML = '';
                             visualize_request.open('POST', '/visualize_observations');
                             // display visualization modal
 
@@ -97,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             visualizeDataStr.append('startDate', JSON.stringify(start_date.value));
                             visualizeDataStr.append('endDate', JSON.stringify(end_date.value));
-                            visualizeDataStr.append('thingId', JSON.stringify(row.thingId));
+                            visualizeDataStr.append('thingId', JSON.stringify(thingId));
                             visualizeDataStr.append('dsList', JSON.stringify(dsListValues));
                             visualize_request.send(visualizeDataStr);
 
