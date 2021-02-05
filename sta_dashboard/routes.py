@@ -109,7 +109,7 @@ def select_datastreams():
 @app.route('/visualize_observations', methods=['POST'])
 def visualize_observations():
     thingId = request.form['thingId'][1:-1]
-    dsList = request.form['dsList'][1:-1].split(',')
+    dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
 
     query_result = Datastream.query.with_entities(
         Datastream.name,
@@ -123,7 +123,7 @@ def visualize_observations():
 
     queryStartDate, queryEndDate = \
         extract_date(request.form['startDate'], request.form['endDate'])
-        
+    
     def makeAPICallUrl(selfLink, queryStartDate, queryEndDate):
         
         startDateISO = queryStartDate.isoformat() + 'Z'
@@ -151,7 +151,7 @@ def visualize_observations():
     for name, selfLink in query_result:
         dataset = {}
         points = []
-        dataset['label'] = name[1:-1]
+        dataset['label'] = name
 
         apiCallUrl = makeAPICallUrl(
             selfLink, queryStartDate, queryEndDate)
@@ -163,7 +163,7 @@ def visualize_observations():
             points.append(
                 {
                     'x': datetime.strptime(
-                        row['phenomenonTime'], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp(),
+                        row['phenomenonTime'].split('/')[0], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp(),
                     'y': row['result']
                 }
             )

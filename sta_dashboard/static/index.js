@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 function markerOnClick(e) {
                     var chartModal = document.getElementById('visualizationModal');
                     var span = document.getElementsByClassName("close")[0];
+                    var canvasDiv = document.getElementById('canvasDiv');
+                    canvasDiv.style.display = 'none';
 
                     ds_request.open('POST', '/show_available_datastreams');
 
@@ -63,9 +65,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         var dsData = JSON.parse(ds_request.responseText);
                         var dsSelectorDiv = document.getElementById('datastreamsSelectorDiv');
                         dsSelectorDiv.innerHTML = '';
-                        dsSelectorForm = document.createElement('form');
-                        dsSelectorForm.id = 'datastreamsSelector';
-                        dsSelectorDiv.appendChild(dsSelectorForm);
 
                         for (i = 0; i < dsData.availableDatastreams.length; i++) {
                             var ds = dsData.availableDatastreams[i];
@@ -74,16 +73,16 @@ document.addEventListener('DOMContentLoaded', function () {
                             el.type = 'checkbox';
                             el.name = 'datastream_available';
                             el.value = ds;
-                            dsSelectorForm.appendChild(el);
-                            dsSelectorForm.appendChild(label);
+                            dsSelectorDiv.appendChild(el);
+                            dsSelectorDiv.appendChild(label);
                             label.appendChild(document.createTextNode(ds));
                         }
 
                         submitButton = document.createElement('input')
                         submitButton.type = 'submit';
-                        dsSelectorForm.appendChild(submitButton);
+                        dsSelectorDiv.appendChild(submitButton);
 
-                        document.querySelector('#datastreamsSelector').onsubmit = function () {
+                        submitButton.onclick = function () {
 
                             visualize_request.open('POST', '/visualize_observations');
                             // display visualization modal
@@ -91,22 +90,25 @@ document.addEventListener('DOMContentLoaded', function () {
                             // construct a form of data to send to server
                             const visualizeDataStr = new FormData();
                             var ds_list = document.querySelectorAll('input[name="datastream_available"]:checked');
+                            var dsListValues = new Array();
+                            for (var ds of ds_list.values()) {
+                                dsListValues.push(ds.value);
+                            }
 
                             visualizeDataStr.append('startDate', JSON.stringify(start_date.value));
                             visualizeDataStr.append('endDate', JSON.stringify(end_date.value));
                             visualizeDataStr.append('thingId', JSON.stringify(row.thingId));
-                            visualizeDataStr.append('dsList', JSON.stringify(ds_list));
-                            // visualizeDataStr.append('datastreamNames', JSON.stringify(row.datastreams.name));
-                            // visualizeDataStr.append('datastreamSelfLinks', JSON.stringify(row.datastreams.selfLink))
+                            visualizeDataStr.append('dsList', JSON.stringify(dsListValues));
                             visualize_request.send(visualizeDataStr);
 
                             // plot the data with chart.js
                             visualize_request.onload = function () {
                                 var observations = JSON.parse(visualize_request.responseText);
-                                var ctx = document.getElementById('scatterChart')
-                                ctx.style.display = 'none';
+                                var canvasEl = document.createElement('canvas');
+                                canvasDiv.appendChild(canvasEl);
+                                canvasEl.maintainAspectRatio = false;
 
-                                var scatterChart = new Chart(ctx, {
+                                var scatterChart = new Chart(canvasEl, {
                                     type: 'scatter',
                                     data: {
                                         datasets: observations['value'],
@@ -136,13 +138,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                         }
                                     }
                                 });
-                                ctx.style.display = 'block';
+                                canvasDiv.style.display = 'block';
                             }
                         }
                     }
 
                     chartModal.style.display = 'block';
                     span.onclick = function () {
+                        canvasDiv.innerHTML = '';
                         chartModal.style.display = "none";
                     }
                 }
@@ -161,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var endpoints = [];
         for (endpoint of endpoints_list) {
-            endpoints.push(endpoint.value)
+            endpoints.push(endpoint.value);
         }
 
         const dataStr = new FormData();

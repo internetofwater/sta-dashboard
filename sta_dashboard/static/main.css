@@ -50,15 +50,8 @@ body {
     left: 20%;
     right: 20%;
     top: 10%;
-    bottom: 10%;
     background-color: #fefefe;
     display: none;
     z-index:3;
     text-align: center;        
-}
-
-#scatterChart {
-    position: absolute;
-    top: 5%;
-    bottom: 5%;
 }
