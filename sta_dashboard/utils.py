@@ -15,3 +15,7 @@ def extract_date(startDateString, endDateString):
             endDateString[1:-1], '%Y-%m-%d')
     
     return queryStartDate, queryEndDate
+
+
+def convert_date(isoDateString):
+    return datetime.strptime(isoDateString, '%Y-%m-%dT%H:%M:%S.%fZ')

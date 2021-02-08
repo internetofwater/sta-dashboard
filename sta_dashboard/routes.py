@@ -112,8 +112,8 @@ def visualize_observations():
     dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
 
     query_result = Datastream.query.with_entities(
-        Datastream.name,
-        Datastream.selfLink
+        Datastream.selfLink,
+        Datastream.unitOfMeasurement
     ).\
         filter(
             Datastream.thingId == thingId,
@@ -123,42 +123,51 @@ def visualize_observations():
 
     queryStartDate, queryEndDate = \
         extract_date(request.form['startDate'], request.form['endDate'])
-    print(thingId, dsList)
+    
     def makeAPICallUrl(selfLink, queryStartDate, queryEndDate):
         
         startDateISO = queryStartDate.isoformat() + 'Z'
         endDateISO = queryEndDate.isoformat() + 'Z'
         
-        url = '&$'.join([
+        observationsUrl = '&$'.join([
             selfLink + r'/Observations?$orderby=phenomenonTime asc',
             r'expand=Datastream',
             r'resultFormat=dataArray'
         ])
         
         if queryStartDate != datetime.min and queryEndDate != datetime.max:
-            url += \
+            observationsUrl += \
                 r'&$filter=phenomenonTime ge ' + startDateISO + \
                     r' and ' + r'phenomenonTime le ' + endDateISO
         elif queryStartDate == datetime.min and queryEndDate != datetime.max:
-            url += \
+            observationsUrl += \
                 r'&$filter=phenomenonTime le ' + endDateISO
         elif queryStartDate != datetime.min and queryEndDate == datetime.max:
-            url += \
+            observationsUrl += \
                 r'&$filter=phenomenonTime ge ' + startDateISO
-        return url
+                
+        observedPropertyUrl = selfLink + r'/ObservedProperty'
+        
+        return observedPropertyUrl, observationsUrl
     
     output_data = []
-    for name, selfLink in query_result:
+    for selfLink, unitOfMeasurement in query_result:
         dataset = {}
         points = []
-        dataset['label'] = name
 
-        apiCallUrl = makeAPICallUrl(
+        observedPropertyUrl, observationsUrl = makeAPICallUrl(
             selfLink, queryStartDate, queryEndDate)
-        resp = requests.get(apiCallUrl)
+        # pdb.set_trace()
+        observationsResponse = requests.get(observationsUrl)
+        observedPropertyResponse = requests.get(observedPropertyUrl)
 
-        values = resp.json()['value'][0]
-        values_df = pd.DataFrame(values['dataArray'], columns=values['components'])
+        observedProperty = observedPropertyResponse.json()
+        dataset['label'] = observedProperty['name'] + ' ({})'.format(unitOfMeasurement['name'])
+        dataset['description'] = observedProperty['description']
+
+        observations = observationsResponse.json()['value'][0]
+        values_df = pd.DataFrame(
+            observations['dataArray'], columns=observations['components'])
         for _, row in values_df.iterrows():
             points.append(
                 {
