@@ -1,0 +1,57 @@
+body {
+    min-height: 100vh;
+    height: 100vh;
+    bottom: 0;
+}
+
+.wrapper {
+    position: relative;
+}
+
+#query-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 10vw;
+    height: 100%;
+}
+
+#map-wrapper {
+    position: absolute;
+    top: 0;
+    left: 10vw;
+    right: 0;
+    height: 100%;
+}
+
+#map {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index:1;
+}
+
+#map-loader {
+    position: absolute;
+    left: 40%;
+    right: 40%;
+    top: 40%;
+    bottom: 40%;
+    background-color: #fefefe;
+    margin: 3%;
+    padding: 20px;
+    display: none;
+    z-index:2;
+    text-align: center;
+}
+
+#visualizationModal {
+    position: absolute;
+    left: 20%;
+    right: 20%;
+    top: 10%;
+    background-color: #fefefe;
+    display: none;
+    z-index:3;
+    text-align: center;        
+}

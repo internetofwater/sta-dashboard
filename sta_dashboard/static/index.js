@@ -1,9 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
+
+    var loader = document.getElementById('map-loader');
     
     document.querySelector('#query-filters').onsubmit = function () {
 
+        loader.style.display = "block";
+
         // Initialize new request
-        const request = new XMLHttpRequest();
+        const query_request = new XMLHttpRequest();
+        const ds_request = new XMLHttpRequest();
+        const visualize_request = new XMLHttpRequest();
+
         var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
         var start_date = document.querySelector('input[name="start-date"]');
         var end_date = document.querySelector('input[name="end-date"]');
@@ -15,11 +22,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        request.open('POST', '/query_points');
+        query_request.open('POST', '/query_points');
+        query_request.onload = function () {
 
-        request.onload = function () {
-
-            var data = JSON.parse(request.responseText);
+            var data = JSON.parse(query_request.responseText);
 
             map.eachLayer(function (layer) {
                 if (layer['options']['id'] != 'tileLayer') {
@@ -41,34 +47,128 @@ document.addEventListener('DOMContentLoaded', function () {
             var markerList = [];
 
             for (row of data.locations) {
-                var marker = L.marker([row.latitude, row.longitude]);
+                var marker = L.marker([row.latitude, row.longitude], {title: row.thingId}).on('click', markerOnClick);
 
-                // TODO: Remove duplicate locations/group datastreams by locations
-                var popUpContent = [];
-                for (var i = 0; i < row.length; i++) {
-                    var a = document.createElement('a'); // Create anchor for link to datastreams
-                    var datastreams_text = document.createTextNode(row.datastreams.name[i]);
-                    a.appendChild(datastreams_text);
-                    a.href = row.datastreams.selfLink[i];
-                    a.target = '_blank';
-                    popUpContent.push(a.outerHTML);
-                };
-                marker.bindPopup(`Datastreams: ${popUpContent.join(', ')}`)
+                function markerOnClick(e) {
+                    var thingId = e.target.options.title
+
+                    var chartModal = document.getElementById('visualizationModal');
+                    var span = document.getElementsByClassName("close")[0];
+                    var canvasDiv = document.getElementById('canvasDiv');
+                    canvasDiv.style.display = 'none';
+
+                    ds_request.open('POST', '/show_available_datastreams');
+
+                    const dsDataStr = new FormData();
+                    dsDataStr.append('thingId', JSON.stringify(thingId));
+                    ds_request.send(dsDataStr);
+                    ds_request.onload = function () {
+
+                        var dsData = JSON.parse(ds_request.responseText);
+                        var dsSelectorDiv = document.getElementById('datastreamsSelectorDiv');
+                        dsSelectorDiv.innerHTML = '';
+
+                        for (i = 0; i < dsData.availableDatastreams.length; i++) {
+                            var ds = dsData.availableDatastreams[i];
+                            var el = document.createElement('input');
+                            var label = document.createElement('label');
+                            el.type = 'checkbox';
+                            el.name = 'datastream_available';
+                            el.value = ds;
+                            dsSelectorDiv.appendChild(el);
+                            dsSelectorDiv.appendChild(label);
+                            label.appendChild(document.createTextNode(ds));
+                        }
+
+                        submitButton = document.createElement('input')
+                        submitButton.type = 'submit';
+                        dsSelectorDiv.appendChild(submitButton);
+
+                        submitButton.onclick = function () {
+
+                            canvasDiv.innerHTML = '';
+                            visualize_request.open('POST', '/visualize_observations');
+                            // display visualization modal
+
+                            // construct a form of data to send to server
+                            const visualizeDataStr = new FormData();
+                            var ds_list = document.querySelectorAll('input[name="datastream_available"]:checked');
+                            var dsListValues = new Array();
+                            for (var ds of ds_list.values()) {
+                                dsListValues.push(ds.value);
+                            }
+
+                            visualizeDataStr.append('startDate', JSON.stringify(start_date.value));
+                            visualizeDataStr.append('endDate', JSON.stringify(end_date.value));
+                            visualizeDataStr.append('thingId', JSON.stringify(thingId));
+                            visualizeDataStr.append('dsList', JSON.stringify(dsListValues));
+                            visualize_request.send(visualizeDataStr);
+
+                            // plot the data with chart.js
+                            visualize_request.onload = function () {
+                                var observations = JSON.parse(visualize_request.responseText);
+                                var canvasEl = document.createElement('canvas');
+                                canvasDiv.appendChild(canvasEl);
+                                canvasEl.maintainAspectRatio = false;
+
+                                var scatterChart = new Chart(canvasEl, {
+                                    type: 'scatter',
+                                    data: {
+                                        datasets: observations['value'],
+                                        options: {
+                                            tooltips: {
+                                                callbacks: {
+                                                    title(datasets) {
+                                                        var time = new Date(datasets[0].xLabel * 1000);
+                                                        return (time.getMonth() + 1) + '/' + time.getDate() + ' ' + time.getHours();
+                                                    }
+                                                }
+                                            },
+                                            scales: {
+                                                xAxes: [
+                                                    {
+                                                        type: 'linear',
+                                                        position: 'bottom',
+                                                        ticks: {
+                                                            callback(value) {
+                                                                var time = new Date(value * 1000);
+                                                                return (time.getMonth() + 1) + '/' + time.getDate() + ' ' + time.getHours();
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                });
+                                canvasDiv.style.display = 'block';
+                            }
+                        }
+                    }
+
+                    chartModal.style.display = 'block';
+                    span.onclick = function () {
+                        canvasDiv.innerHTML = '';
+                        chartModal.style.display = "none";
+                    }
+                }
                 markerList.push(marker);
-            };
+            }
 
             markers.addLayers(markerList);
             map.addLayer(markers);
 
             const checckbox_title = `${markerList.length} locations found.`;
             document.querySelector('#checkbox-title').innerHTML = checckbox_title;
+            loader.style.display = 'none';
+            window.alert(checckbox_title);
 
         }
 
         var endpoints = [];
         for (endpoint of endpoints_list) {
-            endpoints.push(endpoint.value)
-        };
+            endpoints.push(endpoint.value);
+        }
 
         const dataStr = new FormData();
         dataStr.append('endpoints', JSON.stringify(endpoints));
@@ -76,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dataStr.append('endDate', JSON.stringify(end_date.value));
 
         // Send the endpoints list to server
-        request.send(dataStr);
+        query_request.send(dataStr);
         return false;
 
     }
