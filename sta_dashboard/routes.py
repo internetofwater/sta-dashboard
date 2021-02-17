@@ -8,7 +8,7 @@ from sqlalchemy import or_, and_
 import pandas as pd
 
 from sta_dashboard import app
-from sta_dashboard.models import Thing, Datastream
+from sta_dashboard.models import Thing, Datastream, ObservedProperty
 from sta_dashboard.utils import extract_date
     
 
@@ -16,7 +16,9 @@ from sta_dashboard.utils import extract_date
 def index():
     # locations = Thing.query.with_entities(Thing.latitude, Thing.longitude).filter(
     #     Thing.endpoint == 'internetofwater').all()
-    return render_template('index.html')
+    properties = ObservedProperty.query.with_entities(ObservedProperty.name).distinct().all()
+    properties = [p[0] for p in properties if len(p) > 0]
+    return render_template('index.html', properties=properties)
 
 
 @app.route('/query_points', methods=['POST'])
@@ -24,7 +26,19 @@ def query_points():
     
     # regex to extract endpoint names from strings
     endpoints = re.findall(r'\w+', request.form['endpoints']) #TODO: support names that contain non-letter chars
+    properties_raw = request.form['properties']
+    properties = [' '.join(re.findall(r'\w+', s)) for s in properties_raw.split(',')]
     # TODO: use regex to extract datetime string
+    
+    # get ids of datastreams that have selected observed properties
+    ds_ids = ObservedProperty.query.with_entities(
+        ObservedProperty.datastreams
+    ).filter(ObservedProperty.name.in_(properties)).all()
+    
+    ds_ids = [s[0].split(',') for s in ds_ids]
+    ds_ids = [item for sublist in ds_ids for item in sublist]
+    
+    pdb.set_trace()
     
     queryStartDate, queryEndDate = \
         extract_date(request.form['startDate'], request.form['endDate'])
@@ -67,7 +81,8 @@ def query_points():
                                 Datastream.phenomenonEndDate >= queryEndDate
                             )
                         ),
-                        Datastream.endpoint == endpoint
+                        Datastream.endpoint == endpoint,
+                        Datastream.id.in_(ds_ids)
                     ).\
                         all()
         if query_result:
@@ -97,8 +112,18 @@ def select_datastreams():
         Datastream.name
     ).\
         filter(Datastream.thingId == thingId).\
-        all()
+            all()
     
+    # ds_ids = [s[0] for s in query_result]
+    # out_ops = []
+    # for ds in ds_ids:
+    #     op = ObservedProperty.query.with_entities(
+    #         ObservedProperty.name
+    #     ).\
+    #         filter(ObservedProperty.datastreams.contains(ds)).\
+    #             all()
+    #     out_ops.append(op)
+    # pdb.set_trace()
     available_ds = list(set([ds for qr in query_result for ds in qr]))
     
     return jsonify({
