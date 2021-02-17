@@ -22,17 +22,17 @@ This is some good interactive documentation for the API, focus on the GET reques
 ## [ ] Add a backend database
 1. [x] SQLite3 for development
 2. [ ] PostgreSQL for deployment
-3. [ ] Cache everything but observations
+3. [x] Cache everything but observations
 ## [x] Show location points on a map
 1. [x] Display OSM tiles with leaflet.js
 2. [x] Test on multiple endpoints
 3. [x] Cluster markers at lower zoom levels
-## [ ] Show location in tabular
-## [ ] Filter points on the map by their propterties
-1. [ ] Select filterable & supported features
+## [ ] Show location in tables
+## [x] Filter points on the map by their observed propterties
+1. [x] Select filterable & supported observed propterties
 ## [ ] Show information of each point
 1. [ ] Show summaries of key features on hover/on click
 2. [ ] Show a dialog box at click that supports
-    1. [ ] Feature visualization (tabular, scatter plot, line chart)
+    1. [x] Feature visualization (tabular, scatter plot, line chart)
     2. [ ] Export as CSV
 ## [ ] Docker containerization
