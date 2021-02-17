@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         dsSelectorDiv.innerHTML = '';
 
                         for (i = 0; i < dsData.availableDatastreamsByProperty.length; i++) {
-                            var dsName = dsData.availableDatastreamsByProperty[i];
+                            var dsName = dsData.availableDatastreamsByProperty[i].name;
                             var dsId = dsData.availableDatastreamsById[i];
                             var el = document.createElement('input');
                             var label = document.createElement('label');
