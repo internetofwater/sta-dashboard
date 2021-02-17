@@ -69,16 +69,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         var dsSelectorDiv = document.getElementById('datastreamsSelectorDiv');
                         dsSelectorDiv.innerHTML = '';
 
-                        for (i = 0; i < dsData.availableDatastreams.length; i++) {
-                            var ds = dsData.availableDatastreams[i];
+                        for (i = 0; i < dsData.availableDatastreamsByProperty.length; i++) {
+                            var dsName = dsData.availableDatastreamsByProperty[i];
+                            var dsId = dsData.availableDatastreamsById[i];
                             var el = document.createElement('input');
                             var label = document.createElement('label');
                             el.type = 'checkbox';
                             el.name = 'datastream_available';
-                            el.value = ds;
+                            el.value = dsId;
                             dsSelectorDiv.appendChild(el);
                             dsSelectorDiv.appendChild(label);
-                            label.appendChild(document.createTextNode(ds));
+                            label.appendChild(document.createTextNode(dsName));
                         }
 
                         submitButton = document.createElement('input')

@@ -38,8 +38,6 @@ def query_points():
     ds_ids = [s[0].split(',') for s in ds_ids]
     ds_ids = [item for sublist in ds_ids for item in sublist]
     
-    pdb.set_trace()
-    
     queryStartDate, queryEndDate = \
         extract_date(request.form['startDate'], request.form['endDate'])
     
@@ -109,25 +107,27 @@ def query_points():
 def select_datastreams():
     thingId = request.form['thingId'][1:-1]
     query_result = Datastream.query.with_entities(
-        Datastream.name
+        Datastream.id
     ).\
         filter(Datastream.thingId == thingId).\
             all()
     
-    # ds_ids = [s[0] for s in query_result]
-    # out_ops = []
-    # for ds in ds_ids:
-    #     op = ObservedProperty.query.with_entities(
-    #         ObservedProperty.name
-    #     ).\
-    #         filter(ObservedProperty.datastreams.contains(ds)).\
-    #             all()
-    #     out_ops.append(op)
-    # pdb.set_trace()
-    available_ds = list(set([ds for qr in query_result for ds in qr]))
+    ds_ids = [s[0] for s in query_result]
+    out_ops = []
+    for ds in ds_ids:
+        op = ObservedProperty.query.with_entities(
+            ObservedProperty.name
+        ).\
+            filter(ObservedProperty.datastreams.contains(ds)).\
+                all()
+        out_ops.append(op)
+    
+    available_ds_op = [s[0] for s in out_ops]
+    # available_ds = list(set([ds for qr in query_result for ds in qr]))
     
     return jsonify({
-        'availableDatastreams': available_ds
+        'availableDatastreamsByProperty': available_ds_op,
+        'availableDatastreamsById': ds_ids
     })
 
 
@@ -142,7 +142,7 @@ def visualize_observations():
     ).\
         filter(
             Datastream.thingId == thingId,
-            Datastream.name.in_(dsList)
+            Datastream.id.in_(dsList)
             ).\
                 all()
 
@@ -182,7 +182,6 @@ def visualize_observations():
 
         observedPropertyUrl, observationsUrl = makeAPICallUrl(
             selfLink, queryStartDate, queryEndDate)
-        # pdb.set_trace()
         observationsResponse = requests.get(observationsUrl)
         observedPropertyResponse = requests.get(observedPropertyUrl)
 
