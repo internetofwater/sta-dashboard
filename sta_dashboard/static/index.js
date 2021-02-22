@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var dsData = JSON.parse(ds_request.responseText);
 
                         for (i = 0; i < dsData.availableDatastreamsByProperty.length; i++) {
-                            var dsName = dsData.availableDatastreamsByProperty[i].name;
+                            var dsName = dsData.availableDatastreamsByProperty[i];
                             var dsId = dsData.availableDatastreamsById[i];
                             var el = document.createElement('input');
                             var label = document.createElement('label');
