@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     var span = document.getElementsByClassName("close")[0];
                     var canvasDiv = document.getElementById('canvasDiv');
                     canvasDiv.style.display = 'none';
+                    var dsSelectorDiv = document.getElementById('datastreamsSelectorDiv');
+                    dsSelectorDiv.innerHTML = '';
+
 
                     ds_request.open('POST', '/show_available_datastreams');
 
@@ -66,8 +69,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     ds_request.onload = function () {
 
                         var dsData = JSON.parse(ds_request.responseText);
-                        var dsSelectorDiv = document.getElementById('datastreamsSelectorDiv');
-                        dsSelectorDiv.innerHTML = '';
 
                         for (i = 0; i < dsData.availableDatastreamsByProperty.length; i++) {
                             var dsName = dsData.availableDatastreamsByProperty[i].name;
