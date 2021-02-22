@@ -114,20 +114,23 @@ def select_datastreams():
     
     ds_ids = [s[0] for s in query_result]
     out_ops = []
+    out_ds_ids = []
     for ds in ds_ids:
         op = ObservedProperty.query.with_entities(
             ObservedProperty.name
         ).\
             filter(ObservedProperty.datastreams.contains(ds)).\
                 all()
-        out_ops.append(op)
+        if op:
+            out_ops.append(op[0])
+            out_ds_ids.append(ds)
     
     available_ds_op = [s[0] for s in out_ops]
     # available_ds = list(set([ds for qr in query_result for ds in qr]))
     
     return jsonify({
         'availableDatastreamsByProperty': available_ds_op,
-        'availableDatastreamsById': ds_ids
+        'availableDatastreamsById': out_ds_ids
     })
 
 
