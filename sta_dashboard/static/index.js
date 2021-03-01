@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const ds_request = new XMLHttpRequest();
         const visualize_request = new XMLHttpRequest();
 
-        var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
-        var properties_list = document.querySelectorAll('input[name="properties"]:checked');
+        // var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
+        var properties_list = document.querySelectorAll('input[name="prop"]:checked');
         var start_date = document.querySelector('input[name="start-date"]');
         var end_date = document.querySelector('input[name="end-date"]');
 
@@ -169,13 +169,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var endpoints = [];
-        for (endpoint of endpoints_list) {
-            endpoints.push(endpoint.value);
-        }
-
         var properties = [];
         for (property of properties_list) {
-            properties.push(property.value);
+            [endpoint, prop] = property.value.split(',');
+            properties.push(prop);
+            endpoints.push(endpoint);
         }
 
         const dataStr = new FormData();

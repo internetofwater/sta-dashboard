@@ -32,6 +32,7 @@ def query_points():
     
     # regex to extract endpoint names from strings
     endpoints = re.findall(r'\w+', request.form['endpoints']) #TODO: support names that contain non-letter chars
+    endpoints = list(set(endpoints))
     properties_raw = request.form['properties']
     properties = [' '.join(re.findall(r'\w+', s)) for s in properties_raw.split(',')]
     # TODO: use regex to extract datetime string
