@@ -14,11 +14,17 @@ from sta_dashboard.utils import extract_date
 
 @app.route('/')
 def index():
-    # locations = Thing.query.with_entities(Thing.latitude, Thing.longitude).filter(
-    #     Thing.endpoint == 'internetofwater').all()
-    properties = ObservedProperty.query.with_entities(ObservedProperty.name).distinct().all()
-    properties = [p[0] for p in properties if len(p) > 0]
-    return render_template('index.html', properties=properties)
+    properties = ObservedProperty.query.with_entities(
+        ObservedProperty.endpoint, ObservedProperty.name).distinct().all()
+    endpoints = set([s[0] for s in properties])
+    property_mapping = {}
+    for edp in endpoints:
+        property_mapping[edp] = []
+    
+    for prop in properties:
+        property_mapping[prop[0]].append(prop[1])
+    
+    return render_template('index.html', property_mapping=property_mapping)
 
 
 @app.route('/query_points', methods=['POST'])
