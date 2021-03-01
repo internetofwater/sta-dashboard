@@ -35,6 +35,23 @@ if __name__ == '__main__':
                 if not op['Datastreams']:
                     continue
                 
+                ds_list = ','.join(['@'.join([str(list(v.values())[0]), endpoint]) for v in op['Datastreams']])
+                                   
+                if 'Datastreams@iot.nextLink' in op.keys():
+                    next_resp = requests.get(op['Datastreams@iot.nextLink'])
+                    next_ds = next_resp.json()['value']
+                    ds_list = \
+                        ','.join([ds_list, ','.join(['@'.join([str(list(v.values())[0]), endpoint])
+                                                 for v in next_ds])])
+                        
+                    while '@iot.nextLink' in next_resp.json().keys():
+                        next_resp = requests.get(
+                            next_resp.json()['@iot.nextLink'])
+                        next_ds = next_resp.json()['value']
+                        ds_list = \
+                            ','.join([ds_list, ','.join(['@'.join([str(list(v.values())[0]), endpoint])
+                                                            for v in next_ds])])
+
                 cached_ops.append(
                     {
                         'id': '@'.join([str(op['@iot.id']), endpoint]),
@@ -42,11 +59,11 @@ if __name__ == '__main__':
                         'name': op['name'],
                         'description': op['description'],
                         'definition': op['definition'],
-                        'datastreams': ','.join(['@'.join([str(list(v.values())[0]), endpoint]) for v in op['Datastreams']])
+                        'datastreams': ds_list
                     }
                 )
             if '@iot.nextLink' in response.json().keys():
-                time.sleep(3)
+                time.sleep(1)
                 response = requests.get(response.json()['@iot.nextLink'])
             else:
                 break
