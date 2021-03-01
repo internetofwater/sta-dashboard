@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const ds_request = new XMLHttpRequest();
         const visualize_request = new XMLHttpRequest();
 
-        var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
-        var properties_list = document.querySelectorAll('input[name="properties"]:checked');
+        // var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
+        var properties_list = document.querySelectorAll('input[name="prop"]:checked');
         var start_date = document.querySelector('input[name="start-date"]');
         var end_date = document.querySelector('input[name="end-date"]');
 
@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     var span = document.getElementsByClassName("close")[0];
                     var canvasDiv = document.getElementById('canvasDiv');
                     canvasDiv.style.display = 'none';
+                    var dsSelectorDiv = document.getElementById('datastreamsSelectorDiv');
+                    dsSelectorDiv.innerHTML = '';
+
 
                     ds_request.open('POST', '/show_available_datastreams');
 
@@ -66,11 +69,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     ds_request.onload = function () {
 
                         var dsData = JSON.parse(ds_request.responseText);
-                        var dsSelectorDiv = document.getElementById('datastreamsSelectorDiv');
-                        dsSelectorDiv.innerHTML = '';
 
                         for (i = 0; i < dsData.availableDatastreamsByProperty.length; i++) {
-                            var dsName = dsData.availableDatastreamsByProperty[i].name;
+                            var dsName = dsData.availableDatastreamsByProperty[i];
                             var dsId = dsData.availableDatastreamsById[i];
                             var el = document.createElement('input');
                             var label = document.createElement('label');
@@ -168,13 +169,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var endpoints = [];
-        for (endpoint of endpoints_list) {
-            endpoints.push(endpoint.value);
-        }
-
         var properties = [];
         for (property of properties_list) {
-            properties.push(property.value);
+            [endpoint, prop] = property.value.split(',');
+            properties.push(prop);
+            endpoints.push(endpoint);
         }
 
         const dataStr = new FormData();

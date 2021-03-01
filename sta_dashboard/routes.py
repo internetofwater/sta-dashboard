@@ -14,11 +14,17 @@ from sta_dashboard.utils import extract_date
 
 @app.route('/')
 def index():
-    # locations = Thing.query.with_entities(Thing.latitude, Thing.longitude).filter(
-    #     Thing.endpoint == 'internetofwater').all()
-    properties = ObservedProperty.query.with_entities(ObservedProperty.name).distinct().all()
-    properties = [p[0] for p in properties if len(p) > 0]
-    return render_template('index.html', properties=properties)
+    properties = ObservedProperty.query.with_entities(
+        ObservedProperty.endpoint, ObservedProperty.name).distinct().all()
+    endpoints = set([s[0] for s in properties])
+    property_mapping = {}
+    for edp in endpoints:
+        property_mapping[edp] = []
+    
+    for prop in properties:
+        property_mapping[prop[0]].append(prop[1])
+    
+    return render_template('index.html', property_mapping=property_mapping)
 
 
 @app.route('/query_points', methods=['POST'])
@@ -26,6 +32,7 @@ def query_points():
     
     # regex to extract endpoint names from strings
     endpoints = re.findall(r'\w+', request.form['endpoints']) #TODO: support names that contain non-letter chars
+    endpoints = list(set(endpoints))
     properties_raw = request.form['properties']
     properties = [' '.join(re.findall(r'\w+', s)) for s in properties_raw.split(',')]
     # TODO: use regex to extract datetime string
@@ -114,20 +121,23 @@ def select_datastreams():
     
     ds_ids = [s[0] for s in query_result]
     out_ops = []
+    out_ds_ids = []
     for ds in ds_ids:
         op = ObservedProperty.query.with_entities(
             ObservedProperty.name
         ).\
             filter(ObservedProperty.datastreams.contains(ds)).\
                 all()
-        out_ops.append(op)
+        if op:
+            out_ops.append(op[0])
+            out_ds_ids.append(ds)
     
     available_ds_op = [s[0] for s in out_ops]
     # available_ds = list(set([ds for qr in query_result for ds in qr]))
     
     return jsonify({
         'availableDatastreamsByProperty': available_ds_op,
-        'availableDatastreamsById': ds_ids
+        'availableDatastreamsById': out_ds_ids
     })
 
 
