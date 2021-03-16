@@ -122,12 +122,28 @@ document.addEventListener('DOMContentLoaded', function () {
                                     options: {
                                         scales: {
                                             xAxes: [{
+                                                ticks: {
+                                                    autoSkip: true,
+                                                    maxTicksLimit: 10
+                                                },
                                                 type: 'time',
                                                 time: {
                                                     parser: 'X',
-                                                    tooltipFormat: "MM/DD/YYYY"
+                                                    tooltipFormat: "MM/DD/YYYY",
+                                                    displayFormats: {
+                                                        day: 'MMM D YYYY',
+                                                        month: 'MMM D YYYY',
+                                                        year: 'MMM D YYYY',
+                                                        hour: 'h:mm a MM/DD/YY',
+                                                        minute: 'h:mm a MM/DD/YY'
+                                                    }
                                                 }
                                             }]
+                                        },
+                                        plugins: {
+                                            colorschemes: {
+                                                scheme: 'tableau.Classic20'
+                                            }
                                         }
                                     }
                                 });
