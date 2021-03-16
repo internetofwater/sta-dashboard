@@ -117,30 +117,17 @@ document.addEventListener('DOMContentLoaded', function () {
                                 var scatterChart = new Chart(canvasEl, {
                                     type: 'scatter',
                                     data: {
-                                        datasets: observations['value'],
-                                        options: {
-                                            tooltips: {
-                                                callbacks: {
-                                                    title(datasets) {
-                                                        var time = new Date(datasets[0].xLabel * 1000);
-                                                        return (time.getMonth() + 1) + '/' + time.getDate() + ' ' + time.getHours();
-                                                    }
+                                        datasets: observations['value']
+                                    },
+                                    options: {
+                                        scales: {
+                                            xAxes: [{
+                                                type: 'time',
+                                                time: {
+                                                    parser: 'X',
+                                                    tooltipFormat: "MM/DD/YYYY"
                                                 }
-                                            },
-                                            scales: {
-                                                xAxes: [
-                                                    {
-                                                        type: 'linear',
-                                                        position: 'bottom',
-                                                        ticks: {
-                                                            callback(value) {
-                                                                var time = new Date(value * 1000);
-                                                                return (time.getMonth() + 1) + '/' + time.getDate() + ' ' + time.getHours();
-                                                            }
-                                                        }
-                                                    }
-                                                ]
-                                            }
+                                            }]
                                         }
                                     }
                                 });

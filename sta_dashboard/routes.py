@@ -198,15 +198,18 @@ def visualize_observations():
         observedProperty = observedPropertyResponse.json()
         dataset['label'] = observedProperty['name'] + ' ({})'.format(unitOfMeasurement['name'])
         dataset['description'] = observedProperty['description']
+        dataset['showLine'] = True
+        dataset['fill'] = False
 
         observations = observationsResponse.json()['value'][0]
         values_df = pd.DataFrame(
             observations['dataArray'], columns=observations['components'])
         for _, row in values_df.iterrows():
+            x_timestamp = datetime.strptime(row['phenomenonTime'].split(
+                '/')[0], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
             points.append(
                 {
-                    'x': datetime.strptime(
-                        row['phenomenonTime'].split('/')[0], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp(),
+                    'x': str(x_timestamp),
                     'y': row['result']
                 }
             )
