@@ -71,8 +71,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         var dsData = JSON.parse(ds_request.responseText);
 
                         for (i = 0; i < dsData.availableDatastreamsByProperty.length; i++) {
+
                             var dsName = dsData.availableDatastreamsByProperty[i];
                             var dsId = dsData.availableDatastreamsById[i];
+                            var dsLink = dsData.availableDatastreamsByLink[i];
+
                             var el = document.createElement('input');
                             var label = document.createElement('label');
                             el.type = 'checkbox';
@@ -80,7 +83,21 @@ document.addEventListener('DOMContentLoaded', function () {
                             el.value = dsId;
                             dsSelectorDiv.appendChild(el);
                             dsSelectorDiv.appendChild(label);
+
+                            // var tooltip = document.createElement('div');
+                            // tooltip.classList.add('tooltip');
+                            var tooltipText = document.createElement('span');
+                            tooltipText.classList.add('tooltiptext');
+                            var tooltipTextLink = document.createElement('a');
+                            tooltipTextLink.href = dsLink;
+                            tooltipTextLink.target = '_blank';
+                            tooltipTextLink.innerHTML = 'Link to datastream';
+                            
+                            tooltipText.appendChild(tooltipTextLink);
+                            label.appendChild(tooltipText);
+                            label.classList.add('tooltip');
                             label.appendChild(document.createTextNode(dsName));
+
                         }
 
                         submitButton = document.createElement('input')
@@ -111,8 +128,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             visualize_request.onload = function () {
                                 var observations = JSON.parse(visualize_request.responseText);
                                 var canvasEl = document.createElement('canvas');
-                                canvasDiv.appendChild(canvasEl);
                                 canvasEl.maintainAspectRatio = false;
+                                canvasDiv.appendChild(canvasEl);
 
                                 var scatterChart = new Chart(canvasEl, {
                                     type: 'scatter',
@@ -129,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                 type: 'time',
                                                 time: {
                                                     parser: 'X',
-                                                    tooltipFormat: "MM/DD/YYYY",
+                                                    tooltipFormat: "h:mm a MM/DD/YY",
                                                     displayFormats: {
                                                         day: 'MMM D YYYY',
                                                         month: 'MMM D YYYY',
@@ -144,7 +161,36 @@ document.addEventListener('DOMContentLoaded', function () {
                                             colorschemes: {
                                                 scheme: 'tableau.Classic20'
                                             }
-                                        }
+                                        },
+                                        // legend: {
+                                        //     position: 'top',
+                                        //     onHover: function (event, legendItem) {
+
+                                        //         // let hovering = false;
+                                        //         legendTooltip = document.createElement('div');
+                                        //         legendTooltip.classList.add('tooltip');
+                                        //         legendTooltip.style.width = '120px';
+                                        //         legendTooltip.style.height = '50px';
+                                        //         legendTooltipText = document.createElement('span');
+                                        //         legendTooltipText.classList.add('tooltiptext');
+                                        //         legendTooltip.appendChild(legendTooltipText);
+                                        //         canvasDiv.appendChild(legendTooltip);
+                                        //         // if (hovering) {
+                                        //         //     return;
+                                        //         // }
+                                        //         // hovering = true;
+                                        //         legendTooltipText.innerHTML = 'Link to observations'
+                                        //         legendTooltipText.href =
+                                        //             observations['value'][legendItem.datasetIndex].observationsUrl.replace('&$resultFormat=dataArray', '');
+                                        //         legendTooltipText.target = '_blank';
+                                        //         // legendTooltip.style.left = event.x + "px";
+                                        //         // legendTooltip.style.top = event.y + "px";
+                                        //     },
+                                        //     onLeave: function () {
+                                        //         legendTooltip.innerHTML = '';
+                                        //         canvasDiv.removeChild(legendTooltip);
+                                        //     }
+                                        // }
                                     }
                                 });
                                 canvasDiv.style.display = 'block';
