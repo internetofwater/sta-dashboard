@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const ds_request = new XMLHttpRequest();
         const visualize_request = new XMLHttpRequest();
 
-        // var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
         var properties_list = document.querySelectorAll('input[name="prop"]:checked');
         var start_date = document.querySelector('input[name="start-date"]');
         var end_date = document.querySelector('input[name="end-date"]');
@@ -84,8 +83,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             dsSelectorDiv.appendChild(el);
                             dsSelectorDiv.appendChild(label);
 
-                            // var tooltip = document.createElement('div');
-                            // tooltip.classList.add('tooltip');
                             var tooltipText = document.createElement('span');
                             tooltipText.classList.add('tooltiptext');
                             var tooltipTextLink = document.createElement('a');
@@ -108,9 +105,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             canvasDiv.innerHTML = '';
                             visualize_request.open('POST', '/visualize_observations');
-                            // display visualization modal
 
-                            // construct a form of data to send to server
+                            // Construct a form of data to send to server
                             const visualizeDataStr = new FormData();
                             var ds_list = document.querySelectorAll('input[name="datastream_available"]:checked');
                             var dsListValues = new Array();
@@ -124,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             visualizeDataStr.append('dsList', JSON.stringify(dsListValues));
                             visualize_request.send(visualizeDataStr);
 
-                            // plot the data with chart.js
+                            // Plot the data with chart.js
                             visualize_request.onload = function () {
                                 var observations = JSON.parse(visualize_request.responseText);
                                 var canvasEl = document.createElement('canvas');
@@ -160,37 +156,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                         plugins: {
                                             colorschemes: {
                                                 scheme: 'tableau.Classic20'
+                                            },
+                                            zoom: {
+                                                pan: {
+                                                    enabled: true,
+                                                    mode: 'xy'
+                                                },
+                                                zoom: {
+                                                    enabled: true,
+                                                    mode: 'xy'
+                                                }
                                             }
                                         },
-                                        // legend: {
-                                        //     position: 'top',
-                                        //     onHover: function (event, legendItem) {
-
-                                        //         // let hovering = false;
-                                        //         legendTooltip = document.createElement('div');
-                                        //         legendTooltip.classList.add('tooltip');
-                                        //         legendTooltip.style.width = '120px';
-                                        //         legendTooltip.style.height = '50px';
-                                        //         legendTooltipText = document.createElement('span');
-                                        //         legendTooltipText.classList.add('tooltiptext');
-                                        //         legendTooltip.appendChild(legendTooltipText);
-                                        //         canvasDiv.appendChild(legendTooltip);
-                                        //         // if (hovering) {
-                                        //         //     return;
-                                        //         // }
-                                        //         // hovering = true;
-                                        //         legendTooltipText.innerHTML = 'Link to observations'
-                                        //         legendTooltipText.href =
-                                        //             observations['value'][legendItem.datasetIndex].observationsUrl.replace('&$resultFormat=dataArray', '');
-                                        //         legendTooltipText.target = '_blank';
-                                        //         // legendTooltip.style.left = event.x + "px";
-                                        //         // legendTooltip.style.top = event.y + "px";
-                                        //     },
-                                        //     onLeave: function () {
-                                        //         legendTooltip.innerHTML = '';
-                                        //         canvasDiv.removeChild(legendTooltip);
-                                        //     }
-                                        // }
                                     }
                                 });
                                 canvasDiv.style.display = 'block';
