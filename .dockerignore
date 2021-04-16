@@ -1,5 +1,15 @@
 # Python cache
 __pycache__
 
+# VS Code related
+*vscode*
+
+# Test tiles
+tests/
+*.csv
+
+# Database
+*.db
+
 # Virtual environment
 env/

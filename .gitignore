@@ -9,7 +9,7 @@ tests/
 *.csv
 
 # Database
-*.db
+**/*.db
 
 # Virtual environment
 env/

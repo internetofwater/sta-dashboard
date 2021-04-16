@@ -1,26 +1,21 @@
 import requests
 import time
+import json
 
 from sta_dashboard import db
 from sta_dashboard.models import Thing, Datastream, ObservedProperty
 from sta_dashboard.utils import *
 
-ENDPOINTS = {
-    'internetofwater': 'https://sta-demo.internetofwater.dev/api/v1.1',
-    # 'taiwan': 'https://sta.ci.taiwan.gov.tw/STA_AirQuality_EPAIoT/v1.1',
-    'newmexicowaterdata': 'https://st.newmexicowaterdata.org/FROST-Server/v1.1',
-    'datacove': 'https://service.datacove.eu/AirThings/v1.1',
-    'SensorThingsGroundWater': 'https://sensorthings.brgm-rec.fr/SensorThingsGroundWater/v1.1',
-    'sta4hydrometry': 'https://sta4hydrometry.brgm-rec.fr/FROST-Server/v1.1',
-    # 'sensorthings-wq': 'https://sensorthings-wq.brgm-rec.fr/FROST-Server/v1.0'
-}
+with open('endpoints.json') as f:
+    ENDPOINTS = json.load(f)
+
 
 
 class Endpoint:
     def __init__(self, endpoint_name):
         self.endpoint_name = endpoint_name
 
-        response = requests.get(ENDPOINTS[self.endpoint_name])
+        response = requests.get(ENDPOINTS[self.endpoint_name]['url'])
         entities_url = {}
         for entity in response.json()['value']:
             entities_url[entity['name']] = entity['url']
@@ -131,6 +126,10 @@ if __name__ == '__main__':
     db.create_all()
 
     for endpoint in list(ENDPOINTS.keys()):
+        
+        if not ENDPOINTS[endpoint]['include']:
+            continue
+        
         print('{}...'.format(endpoint))
         start_timestamp = time.time()
         edp = Endpoint(endpoint)
