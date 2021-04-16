@@ -26,14 +26,16 @@ This is some good interactive documentation for the API, focus on the GET reques
 ## [x] Show location points on a map
 1. [x] Use OSM tiles and leaflet.js
 2. [x] Test on multiple endpoints
-3. [ ] Cluster markers at lower zoom levels
+3. [x] Cluster markers at lower zoom levels
 4. [ ] Potential issue: slow loading when the number of points goes above thousands/tens of thousands.
 ## [ ] Show location in tabular
-## [ ] Filter points on the map by their propterties
-1. [ ] Select filterable & supported features
+## [x] Filter points on the map by their propterties
+1. [x] Select filterable & supported features
 ## [ ] Show information of each point
 1. [ ] Show summaries of key features at hover
-2. [ ] Show a dialog box at click that supports
-    1. [ ] Feature visualization (tabular, scatter plot, line chart)
+2. [ ] Show a dialog box on click that supports
+    1. [x] Feature visualization (tabular, scatter plot, line chart)
     2. [ ] Export as CSV
 ## [ ] Docker containerization
+1. [x] Docker for the web dashboard
+2. [ ] Postgres container
