@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const ds_request = new XMLHttpRequest();
         const visualize_request = new XMLHttpRequest();
 
-        // var endpoints_list = document.querySelectorAll('input[name="endpoint"]:checked');
         var properties_list = document.querySelectorAll('input[name="prop"]:checked');
         var start_date = document.querySelector('input[name="start-date"]');
         var end_date = document.querySelector('input[name="end-date"]');
@@ -71,8 +70,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         var dsData = JSON.parse(ds_request.responseText);
 
                         for (i = 0; i < dsData.availableDatastreamsByProperty.length; i++) {
+
                             var dsName = dsData.availableDatastreamsByProperty[i];
                             var dsId = dsData.availableDatastreamsById[i];
+                            var dsLink = dsData.availableDatastreamsByLink[i];
+
                             var el = document.createElement('input');
                             var label = document.createElement('label');
                             el.type = 'checkbox';
@@ -80,7 +82,19 @@ document.addEventListener('DOMContentLoaded', function () {
                             el.value = dsId;
                             dsSelectorDiv.appendChild(el);
                             dsSelectorDiv.appendChild(label);
+
+                            var tooltipText = document.createElement('span');
+                            tooltipText.classList.add('tooltiptext');
+                            var tooltipTextLink = document.createElement('a');
+                            tooltipTextLink.href = dsLink;
+                            tooltipTextLink.target = '_blank';
+                            tooltipTextLink.innerHTML = 'Link to datastream';
+                            
+                            tooltipText.appendChild(tooltipTextLink);
+                            label.appendChild(tooltipText);
+                            label.classList.add('tooltip');
                             label.appendChild(document.createTextNode(dsName));
+
                         }
 
                         submitButton = document.createElement('input')
@@ -91,9 +105,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             canvasDiv.innerHTML = '';
                             visualize_request.open('POST', '/visualize_observations');
-                            // display visualization modal
 
-                            // construct a form of data to send to server
+                            // Construct a form of data to send to server
                             const visualizeDataStr = new FormData();
                             var ds_list = document.querySelectorAll('input[name="datastream_available"]:checked');
                             var dsListValues = new Array();
@@ -107,41 +120,54 @@ document.addEventListener('DOMContentLoaded', function () {
                             visualizeDataStr.append('dsList', JSON.stringify(dsListValues));
                             visualize_request.send(visualizeDataStr);
 
-                            // plot the data with chart.js
+                            // Plot the data with chart.js
                             visualize_request.onload = function () {
                                 var observations = JSON.parse(visualize_request.responseText);
                                 var canvasEl = document.createElement('canvas');
-                                canvasDiv.appendChild(canvasEl);
                                 canvasEl.maintainAspectRatio = false;
+                                canvasDiv.appendChild(canvasEl);
 
                                 var scatterChart = new Chart(canvasEl, {
                                     type: 'scatter',
                                     data: {
-                                        datasets: observations['value'],
-                                        options: {
-                                            tooltips: {
-                                                callbacks: {
-                                                    title(datasets) {
-                                                        var time = new Date(datasets[0].xLabel * 1000);
-                                                        return (time.getMonth() + 1) + '/' + time.getDate() + ' ' + time.getHours();
+                                        datasets: observations['value']
+                                    },
+                                    options: {
+                                        scales: {
+                                            xAxes: [{
+                                                ticks: {
+                                                    autoSkip: true,
+                                                    maxTicksLimit: 10
+                                                },
+                                                type: 'time',
+                                                time: {
+                                                    parser: 'X',
+                                                    tooltipFormat: "h:mm a MM/DD/YY",
+                                                    displayFormats: {
+                                                        day: 'MMM D YYYY',
+                                                        month: 'MMM D YYYY',
+                                                        year: 'MMM D YYYY',
+                                                        hour: 'h:mm a MM/DD/YY',
+                                                        minute: 'h:mm a MM/DD/YY'
                                                     }
                                                 }
+                                            }]
+                                        },
+                                        plugins: {
+                                            colorschemes: {
+                                                scheme: 'tableau.Classic20'
                                             },
-                                            scales: {
-                                                xAxes: [
-                                                    {
-                                                        type: 'linear',
-                                                        position: 'bottom',
-                                                        ticks: {
-                                                            callback(value) {
-                                                                var time = new Date(value * 1000);
-                                                                return (time.getMonth() + 1) + '/' + time.getDate() + ' ' + time.getHours();
-                                                            }
-                                                        }
-                                                    }
-                                                ]
+                                            zoom: {
+                                                pan: {
+                                                    enabled: true,
+                                                    mode: 'xy'
+                                                },
+                                                zoom: {
+                                                    enabled: true,
+                                                    mode: 'xy'
+                                                }
                                             }
-                                        }
+                                        },
                                     }
                                 });
                                 canvasDiv.style.display = 'block';

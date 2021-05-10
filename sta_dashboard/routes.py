@@ -114,30 +114,32 @@ def query_points():
 def select_datastreams():
     thingId = request.form['thingId'][1:-1]
     query_result = Datastream.query.with_entities(
-        Datastream.id
+        Datastream.id, Datastream.selfLink
     ).\
         filter(Datastream.thingId == thingId).\
             all()
     
-    ds_ids = [s[0] for s in query_result]
     out_ops = []
     out_ds_ids = []
-    for ds in ds_ids:
+    out_ds_links = []
+    for ds_id, ds_link in query_result:
         op = ObservedProperty.query.with_entities(
             ObservedProperty.name
         ).\
-            filter(ObservedProperty.datastreams.contains(ds)).\
+            filter(ObservedProperty.datastreams.contains(ds_id)).\
                 all()
         if op:
             out_ops.append(op[0])
-            out_ds_ids.append(ds)
+            out_ds_ids.append(ds_id)
+            out_ds_links.append(ds_link)
     
     available_ds_op = [s[0] for s in out_ops]
     # available_ds = list(set([ds for qr in query_result for ds in qr]))
     
     return jsonify({
         'availableDatastreamsByProperty': available_ds_op,
-        'availableDatastreamsById': out_ds_ids
+        'availableDatastreamsById': out_ds_ids,
+        'availableDatastreamsByLink': out_ds_links
     })
 
 
@@ -198,21 +200,26 @@ def visualize_observations():
         observedProperty = observedPropertyResponse.json()
         dataset['label'] = observedProperty['name'] + ' ({})'.format(unitOfMeasurement['name'])
         dataset['description'] = observedProperty['description']
+        dataset['showLine'] = True
+        dataset['fill'] = False
+        dataset['observationsUrl'] = observationsUrl
 
         observations = observationsResponse.json()['value'][0]
         values_df = pd.DataFrame(
             observations['dataArray'], columns=observations['components'])
         for _, row in values_df.iterrows():
+            x_timestamp = datetime.strptime(row['phenomenonTime'].split(
+                '/')[0], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
             points.append(
                 {
-                    'x': datetime.strptime(
-                        row['phenomenonTime'].split('/')[0], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp(),
+                    'x': str(x_timestamp),
                     'y': row['result']
                 }
             )
         dataset['data'] = points
         output_data.append(dataset)
 
+    # pdb.set_trace()
     return jsonify({
         'value': output_data
     })
