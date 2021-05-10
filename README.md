@@ -37,7 +37,6 @@ This is some good interactive documentation for the API, focus on the GET reques
 1. [ ] Show summaries of key features on hover
 2. [ ] Show on click:
     1. [x] Feature visualization (connected time series plot, supports pan&zoom)
-
     2. [ ] Export as CSV
     3. [x] Show links to datastreams when hover on datastream names
 ## [ ] Docker containerization
