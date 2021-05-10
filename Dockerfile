@@ -3,4 +3,6 @@ WORKDIR /app
 COPY . /app
 RUN pip install -r requirements.txt
 
-CMD ["./docker_entrypoint.sh"] 
+EXPOSE 5000
+
+CMD ["sh", "./docker-entrypoint.sh"] 

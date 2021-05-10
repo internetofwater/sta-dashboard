@@ -9,7 +9,7 @@
     },
     "newmexicowaterdata": {
         "url": "https://st.newmexicowaterdata.org/FROST-Server/v1.1",
-        "include": true
+        "include": false
     },
     "datacove": {
         "url": "https://service.datacove.eu/AirThings/v1.1",
