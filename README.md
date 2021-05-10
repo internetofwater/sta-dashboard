@@ -15,27 +15,29 @@ Ideally, the dashboard would be able to consume from multiple endpoints, that th
 This is the official documentation for the API http://docs.opengeospatial.org/is/15-078r6/15-078r6.html
 This is some good interactive documentation for the API, focus on the GET requests https://gost1.docs.apiary.io/#
 
+# Usage
+1. Edit endpoints to include in `endpoints.json`
+2. Edit environment variables in `.env` file
+3. Edit local port to map to from flask container at line 11 in `docker-compose.yml`
 # Dependencies
 - [See requirements.txt](requirements.txt)
 
 # Storyboard
-## [ ] Add a backend database
-1. [x] SQLite3 for development
-2. [ ] PostgreSQL for deployment
-3. [ ] Download data from API endpoints and update regularly
+## [x] Cached database
+1. [x] Supports all SQLAlchemy supported databases. Have tested on PostgreSQL and SQLite.
 ## [x] Show location points on a map
-1. [x] Use OSM tiles and leaflet.js
-2. [x] Test on multiple endpoints
+1. [x] Display OSM tiles with leaflet.js
+2. [x] Support selecting multiple endpoints
 3. [x] Cluster markers at lower zoom levels
 4. [ ] Potential issue: slow loading when the number of points goes above thousands/tens of thousands.
-## [ ] Show location in tabular
-## [x] Filter points on the map by their propterties
-1. [x] Select filterable & supported features
-## [ ] Show information of each point
-1. [ ] Show summaries of key features at hover
-2. [ ] Show a dialog box on click that supports
-    1. [x] Feature visualization (tabular, scatter plot, line chart)
+
+## [x] Filter points to display on the map by observed properties
+## [ ] Show detailed information for each point
+1. [ ] Show summaries of key features on hover
+2. [ ] Show on click:
+    1. [x] Feature visualization (connected time series plot, supports pan&zoom)
     2. [ ] Export as CSV
+    3. [x] Show links to datastreams when hover on datastream names
 ## [ ] Docker containerization
-1. [x] Docker for the web dashboard
-2. [ ] Postgres container
+1. [x] Add docker-compose file to configure containers for web app and PostgreSQL database
+2. [ ] Schedule routine updates on cached database in PostgreSQL
