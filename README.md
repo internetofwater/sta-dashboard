@@ -18,7 +18,6 @@ This is some good interactive documentation for the API, focus on the GET reques
 # Usage
 1. Edit endpoints to include in `endpoints.json`.
 2. Edit environment variables in `.env` file.
-3. Edit local port to map to from flask container at line 11 in `docker-compose.yml`.
 4. In command line, run `docker-compose --env-file .env up`. The web app will be running on `localhost:${FLASK_HOST_PORT}` on your host machine.
 # Dependencies
 - [See requirements.txt](requirements.txt)
