@@ -10,7 +10,6 @@ with open('endpoints.json') as f:
     ENDPOINTS = json.load(f)
 
 
-
 class Endpoint:
     def __init__(self, endpoint_name):
         self.endpoint_name = endpoint_name
@@ -38,6 +37,7 @@ class Endpoint:
                 break
 
         return locations_list
+    
     
     def get_things_and_datastreams(self):
         url = self.entities_url['Things']
@@ -180,4 +180,3 @@ if __name__ == '__main__':
         print('{} finished within {:.2f} seconds'.format(endpoint, time.time() - start_timestamp))
 
     db.session.commit()
-
