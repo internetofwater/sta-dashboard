@@ -47,7 +47,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var markerList = [];
 
             for (row of data.locations) {
-                var marker = L.marker([row.latitude, row.longitude], {title: row.thingId}).on('click', markerOnClick);
+                var geojsonFeature = {
+                    "type": "Feature",
+                    "geometry": row.location_geojson
+                };
+                var marker = L.geoJSON(geojsonFeature, {title: row.thingId}).on('click', markerOnClick);
+                // var marker = L.marker([row.latitude, row.longitude], {title: row.thingId}).on('click', markerOnClick);
 
                 function markerOnClick(e) {
                     var thingId = e.target.options.title
