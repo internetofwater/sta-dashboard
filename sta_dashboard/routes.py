@@ -52,7 +52,7 @@ def query_points():
     first_latlons = [] # save first latlon pair at each endpoint, use the average pair as default view latlon
     
     query_result_keys = [
-        'phenomenonStartDate', 'phenomenonEndDate', 'endpoint', 'name', 'selfLink', 'thingId', 'latitude', 'longitude'
+        'phenomenonStartDate', 'phenomenonEndDate', 'endpoint', 'name', 'selfLink', 'thingId', 'location_geojson'
     ]
     for endpoint in endpoints:
         
@@ -63,8 +63,7 @@ def query_points():
             Datastream.name,
             Datastream.selfLink,
             Datastream.thingId,
-            Thing.latitude, 
-            Thing.longitude
+            Thing.location_geojson
             ).\
                 join(Thing, Datastream.thingId==Thing.id).\
                     filter(
@@ -90,13 +89,24 @@ def query_points():
                         Datastream.id.in_(ds_ids)
                     ).\
                         all()
+        
         if query_result:
-            first_latlons.append(query_result[0][-2:]) # Get the first lat/lon pair as the default view point
+            
+            first_latlon = query_result[0][-1]['coordinates']
+            while True:
+                if not isinstance(first_latlon[0], list):
+                    break
+                else:
+                    # Get the first lat/lon pair as the default view point
+                    first_latlon = first_latlon[0]
+                    
+            first_latlons.append(tuple(first_latlon[::-1]))
             
         query_df = pd.DataFrame(query_result, columns=query_result_keys)
         
         unique_locations = query_df.drop_duplicates(
-            'thingId')[['thingId', 'latitude', 'longitude']]
+            'thingId')[['thingId', 'location_geojson']]
+        
         locations.extend(list(unique_locations.T.to_dict().values()))
 
     zoom_level = 3 if len(endpoints) > 1 else 5
@@ -134,7 +144,6 @@ def select_datastreams():
             out_ds_links.append(ds_link)
     
     available_ds_op = [s[0] for s in out_ops]
-    # available_ds = list(set([ds for qr in query_result for ds in qr]))
     
     return jsonify({
         'availableDatastreamsByProperty': available_ds_op,

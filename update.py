@@ -58,8 +58,7 @@ class Endpoint:
                         'endpoint': self.endpoint_name,
                         'name': thing['name'],
                         'description': thing['description'],
-                        'longitude': thing['Locations'][0]['location']['coordinates'][0],
-                        'latitude': thing['Locations'][0]['location']['coordinates'][1],
+                        'location_geojson': thing['Locations'][0]['location'],
                         'datastreams': thing['Datastreams']
                     }
                 )

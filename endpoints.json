@@ -26,5 +26,9 @@
     "sensorthings-wq": {
         "url": "https://sensorthings-wq.brgm-rec.fr/FROST-Server/v1.0",
         "include": false
+    },
+    "twsd": {
+        "url": "https://twsd.internetofwater.dev/api/v1.1",
+        "include": true
     }
 }
