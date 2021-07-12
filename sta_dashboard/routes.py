@@ -167,7 +167,7 @@ def visualize_observations():
         endDateISO = queryEndDate.isoformat() + 'Z'
         
         observationsUrl = '&$'.join([
-            selfLink + r'/Observations?$orderby=phenomenonTime asc',
+            selfLink + r'/Observations?$orderby=phenomenonTime desc',
             r'expand=Datastream',
             r'resultFormat=dataArray'
         ])
