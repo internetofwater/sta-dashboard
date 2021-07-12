@@ -2,13 +2,13 @@
 **/__pycache__
 
 # VS Code related
-*vscode*
+**/*vscode*
 
 # Test tiles
 tests/
 
 # Database
-**/*.db
+*.db
 
 # Virtual environment
-env/
+**/env
