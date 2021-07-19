@@ -37,23 +37,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
             // Create a new MarkerClusterGroup
-            var markers = L.markerClusterGroup({
+            const markers = L.markerClusterGroup({
                 spiderfyOnMaxZoom: false,
                 chunkedLoading: true,
                 maxZoom: 12
             });
 
-            // Add point markers
-            var markerList = [];
+            const polygons = L.deflate({ minSize: 20 });
+            
+            var featureList = [];
+
 
             for (row of data.locations) {
                 var geojsonFeature = {
                     "type": "Feature",
                     "geometry": row.location_geojson
                 };
-                var marker = L.geoJSON(geojsonFeature, {title: row.thingId}).on('click', markerOnClick);
+                var feature = L.geoJSON(geojsonFeature, {title: row.thingId}).on('click', featureOnClick);
 
-                function markerOnClick(e) {
+                function featureOnClick(e) {
                     var thingId = e.target.options.title
 
                     var chartModal = document.getElementById('visualizationModal');
@@ -185,13 +187,23 @@ document.addEventListener('DOMContentLoaded', function () {
                         chartModal.style.display = "none";
                     }
                 }
-                markerList.push(marker);
+
+                if (geojsonFeature.geometry.type == 'Point') {
+                    feature.addTo(markers)
+                } else if (geojsonFeature.geometry.type == 'MultiPolygon') {
+                    feature.addTo(polygons)
+                } else if (geojsonFeature.geometry.type == 'Polygon') {
+                    feature.addTo(polygons)
+                }
+
+                featureList.push(feature);
+
             }
 
-            markers.addLayers(markerList);
             map.addLayer(markers);
+            map.addLayer(polygons);
 
-            const checckbox_title = `${markerList.length} locations found.`;
+            const checckbox_title = `${featureList.length} locations found.`;
             document.querySelector('#checkbox-title').innerHTML = checckbox_title;
             loader.style.display = 'none';
             window.alert(checckbox_title);
