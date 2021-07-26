@@ -35,18 +35,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             map.flyTo(data.viewLatlon, data.zoom_level);
 
-
-            // Create a new MarkerClusterGroup
+            // Create a new MarkerClusterGroup for point locations
             const markers = L.markerClusterGroup({
                 spiderfyOnMaxZoom: false,
                 chunkedLoading: true,
                 maxZoom: 12
             });
 
-            const polygons = L.deflate({ minSize: 20 });
+            // Create a new Deflate for polygon locations
+            const polygons = L.deflate({
+                minSize: 100,
+                markerLayer: markers
+            });
             
             var featureList = [];
-
 
             for (row of data.locations) {
                 var geojsonFeature = {
@@ -190,9 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (geojsonFeature.geometry.type == 'Point') {
                     feature.addTo(markers)
-                } else if (geojsonFeature.geometry.type == 'MultiPolygon') {
-                    feature.addTo(polygons)
-                } else if (geojsonFeature.geometry.type == 'Polygon') {
+                } else if (geojsonFeature.geometry.type == 'MultiPolygon' || geojsonFeature.geometry.type == 'Polygon') {
                     feature.addTo(polygons)
                 }
 
