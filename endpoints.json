@@ -30,5 +30,9 @@
     "twsd": {
         "url": "https://twsd.internetofwater.dev/api/v1.1",
         "include": true
+    },
+    "WaterDataLabs": {
+        "url": "https://labs.waterdata.usgs.gov/sta/v1.1/",
+        "include": true
     }
 }
