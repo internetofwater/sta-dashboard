@@ -2,8 +2,10 @@ import re
 from datetime import datetime
 import requests
 import pdb
+from zipfile import ZipFile
+from io import BytesIO
 
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, send_file
 from sqlalchemy import or_, and_
 import pandas as pd
 
@@ -150,13 +152,35 @@ def select_datastreams():
         'availableDatastreamsById': out_ds_ids,
         'availableDatastreamsByLink': out_ds_links
     })
+    
+def makeAPICallUrl(selfLink, queryStartDate, queryEndDate):
+    
+    startDateISO = queryStartDate.isoformat() + 'Z'
+    endDateISO = queryEndDate.isoformat() + 'Z'
+    
+    observationsUrl = '&$'.join([
+        selfLink + r'/Observations?$orderby=phenomenonTime desc',
+        r'expand=Datastream',
+        r'resultFormat=dataArray'
+    ])
+    
+    if queryStartDate != datetime.min and queryEndDate != datetime.max:
+        observationsUrl += \
+            r'&$filter=phenomenonTime ge ' + startDateISO + \
+                r' and ' + r'phenomenonTime le ' + endDateISO
+    elif queryStartDate == datetime.min and queryEndDate != datetime.max:
+        observationsUrl += \
+            r'&$filter=phenomenonTime le ' + endDateISO
+    elif queryStartDate != datetime.min and queryEndDate == datetime.max:
+        observationsUrl += \
+            r'&$filter=phenomenonTime ge ' + startDateISO
+            
+    observedPropertyUrl = selfLink + r'/ObservedProperty'
+    
+    return observedPropertyUrl, observationsUrl
 
 
-@app.route('/visualize_observations', methods=['POST'])
-def visualize_observations():
-    thingId = request.form['thingId'][1:-1]
-    dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
-
+def query_observations(thingId, dsList, startDate, endDate):
     query_result = Datastream.query.with_entities(
         Datastream.selfLink,
         Datastream.unitOfMeasurement
@@ -166,37 +190,11 @@ def visualize_observations():
             Datastream.id.in_(dsList)
             ).\
                 all()
-
-    queryStartDate, queryEndDate = \
-        extract_date(request.form['startDate'], request.form['endDate'])
-    
-    def makeAPICallUrl(selfLink, queryStartDate, queryEndDate):
-        
-        startDateISO = queryStartDate.isoformat() + 'Z'
-        endDateISO = queryEndDate.isoformat() + 'Z'
-        
-        observationsUrl = '&$'.join([
-            selfLink + r'/Observations?$orderby=phenomenonTime desc',
-            r'expand=Datastream',
-            r'resultFormat=dataArray'
-        ])
-        
-        if queryStartDate != datetime.min and queryEndDate != datetime.max:
-            observationsUrl += \
-                r'&$filter=phenomenonTime ge ' + startDateISO + \
-                    r' and ' + r'phenomenonTime le ' + endDateISO
-        elif queryStartDate == datetime.min and queryEndDate != datetime.max:
-            observationsUrl += \
-                r'&$filter=phenomenonTime le ' + endDateISO
-        elif queryStartDate != datetime.min and queryEndDate == datetime.max:
-            observationsUrl += \
-                r'&$filter=phenomenonTime ge ' + startDateISO
                 
-        observedPropertyUrl = selfLink + r'/ObservedProperty'
-        
-        return observedPropertyUrl, observationsUrl
-    
-    output_data = []
+    queryStartDate, queryEndDate = \
+        extract_date(startDate, endDate)
+                
+    output_observations = []
     for selfLink, unitOfMeasurement in query_result:
         dataset = {}
         points = []
@@ -207,7 +205,10 @@ def visualize_observations():
         observedPropertyResponse = requests.get(observedPropertyUrl)
 
         observedProperty = observedPropertyResponse.json()
-        dataset['label'] = observedProperty['name'] + ' ({})'.format(unitOfMeasurement['name'])
+        dataset['label'] = ' '.join([
+            observedProperty['name'],
+            '({})'.format(unitOfMeasurement['name'])
+        ])
         dataset['description'] = observedProperty['description']
         dataset['showLine'] = True
         dataset['fill'] = False
@@ -226,9 +227,71 @@ def visualize_observations():
                 }
             )
         dataset['data'] = points
-        output_data.append(dataset)
+        output_observations.append(dataset)
+        
+    return output_observations
 
-    # pdb.set_trace()
+@app.route('/visualize_observations', methods=['POST'])
+def visualize_observations():
+    thingId = request.form['thingId'][1:-1]
+    dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
+    
+    output_data = query_observations(
+        thingId, dsList, request.form['startDate'], request.form['endDate']
+    )
+    
     return jsonify({
         'value': output_data
     })
+
+
+@app.route('/download_observations', methods=['POST'])
+def download_observations():
+    thingId = request.form['thingId'][1:-1]
+    dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
+    
+    output_data = query_observations(
+        thingId, dsList, request.form['startDate'], request.form['endDate']
+    )
+    
+    in_memory = BytesIO()
+        
+    with ZipFile(in_memory, 'a') as zf:
+    
+        for ds in output_data:
+            data_pd = pd.DataFrame.from_records(ds['data'])
+            data_pd['x'] = pd.to_datetime(data_pd['x'], unit='s')
+            data_pd_str = data_pd.rename(
+                columns={
+                    'x': 'datetime',
+                    'y': ds['label']
+                }
+            ).to_csv(index=False)
+            
+            pd_filename = \
+                '{}_{}_thing_{}.csv'.format(
+                    '_'.join([w.lower() for w in ds['label'].split(' ')[:-1]]),
+                    *thingId.split('@')[::-1]
+                )
+                
+            # pdb.set_trace()
+            zf.writestr(pd_filename, data_pd_str)
+            
+        # fix for Linux zip files read in Windows
+        for file in zf.filelist:
+            file.create_system = 0
+        
+
+    # response = HttpResponse(mimetype='application/zip')
+    # response['Content-Disposition'] = 'attachment; filename=download_{}.zip'.format(thingId)
+    
+    in_memory.seek(0)    
+    # response.write(in_memory.read())
+    
+    # pdb.set_trace()
+    return send_file(
+        in_memory, 
+        attachment_filename='{}_thing_{}.zip'.format(*thingId.split('@')[::-1]),
+        as_attachment=True,
+        mimetype='application/zip'
+    )

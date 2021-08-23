@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const query_request = new XMLHttpRequest();
         const ds_request = new XMLHttpRequest();
         const visualize_request = new XMLHttpRequest();
+        const downloadCsv_request = new XMLHttpRequest();
 
         var properties_list = document.querySelectorAll('input[name="prop"]:checked');
         var start_date = document.querySelector('input[name="start-date"]');
@@ -79,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         for (i = 0; i < dsData.availableDatastreamsByProperty.length; i++) {
 
+                            // Populate available datastreams and make a checkbox for each
                             var dsName = dsData.availableDatastreamsByProperty[i];
                             var dsId = dsData.availableDatastreamsById[i];
                             var dsLink = dsData.availableDatastreamsByLink[i];
@@ -105,8 +107,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         }
 
+                        linebreak = document.createElement('br');
+                        dsSelectorDiv.appendChild(linebreak);
+
                         submitButton = document.createElement('input')
-                        submitButton.type = 'submit';
+                        submitButton.type = 'button';
+                        submitButton.value = 'Visualize';
                         dsSelectorDiv.appendChild(submitButton);
 
                         submitButton.onclick = function () {
@@ -126,7 +132,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             visualizeDataStr.append('endDate', JSON.stringify(end_date.value));
                             visualizeDataStr.append('thingId', JSON.stringify(thingId));
                             visualizeDataStr.append('dsList', JSON.stringify(dsListValues));
-                            visualize_request.send(visualizeDataStr);
 
                             // Plot the data with chart.js
                             visualize_request.onload = function () {
@@ -180,7 +185,49 @@ document.addEventListener('DOMContentLoaded', function () {
                                 });
                                 canvasDiv.style.display = 'block';
                             }
+
+                            visualize_request.send(visualizeDataStr);
                         }
+
+                        downloadCsvButton = document.createElement('input')
+                        downloadCsvButton.type = 'button';
+                        downloadCsvButton.value = 'Download as CSV';
+                        dsSelectorDiv.appendChild(downloadCsvButton);
+
+                        downloadCsvButton.onclick = function () {
+                            downloadCsv_request.open('POST', '/download_observations');
+                            downloadCsv_request.responseType = 'blob';
+
+                            // Construct a form of data to send to server
+                            const downloadCsvDataStr = new FormData();
+                            var ds_list = document.querySelectorAll('input[name="datastream_available"]:checked');
+                            var dsListValues = new Array();
+                            for (var ds of ds_list.values()) {
+                                dsListValues.push(ds.value);
+                            }
+
+                            downloadCsvDataStr.append('startDate', JSON.stringify(start_date.value));
+                            downloadCsvDataStr.append('endDate', JSON.stringify(end_date.value));
+                            downloadCsvDataStr.append('thingId', JSON.stringify(thingId));
+                            downloadCsvDataStr.append('dsList', JSON.stringify(dsListValues));
+
+                            downloadCsv_request.onload = function (e) {
+                                var blob = e.currentTarget.response;
+                                var contentDispo = e.currentTarget.getResponseHeader('Content-Disposition');
+                                var fileName = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
+                                saveBlob(blob, fileName);
+
+                                function saveBlob(blob, fileName) {
+                                    var a = document.createElement('a');
+                                    a.href = window.URL.createObjectURL(blob);
+                                    a.download = fileName;
+                                    a.dispatchEvent(new MouseEvent('click'));
+                                }
+                            }
+
+                            downloadCsv_request.send(downloadCsvDataStr);
+                        }
+
                     }
 
                     chartModal.style.display = 'block';
