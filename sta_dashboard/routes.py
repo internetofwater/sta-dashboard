@@ -274,21 +274,14 @@ def download_observations():
                     *thingId.split('@')[::-1]
                 )
                 
-            # pdb.set_trace()
             zf.writestr(pd_filename, data_pd_str)
             
         # fix for Linux zip files read in Windows
         for file in zf.filelist:
             file.create_system = 0
         
-
-    # response = HttpResponse(mimetype='application/zip')
-    # response['Content-Disposition'] = 'attachment; filename=download_{}.zip'.format(thingId)
     
     in_memory.seek(0)    
-    # response.write(in_memory.read())
-    
-    # pdb.set_trace()
     return send_file(
         in_memory, 
         attachment_filename='{}_thing_{}.zip'.format(*thingId.split('@')[::-1]),
