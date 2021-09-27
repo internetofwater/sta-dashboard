@@ -12,3 +12,6 @@ tests/
 
 # Virtual environment
 **/env
+
+# Others
+**/*.csv

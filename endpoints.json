@@ -1,7 +1,7 @@
 {
     "internetofwater": {
         "url": "https://sta-demo.internetofwater.dev/api/v1.1",
-        "include": true
+        "include": false
     },
     "taiwan": {
         "url": "https://sta.ci.taiwan.gov.tw/STA_AirQuality_EPAIoT/v1.1",
@@ -13,15 +13,15 @@
     },
     "datacove": {
         "url": "https://service.datacove.eu/AirThings/v1.1",
-        "include": false
+        "include": true
     },
     "SensorThingsGroundWater": {
         "url": "https://sensorthings.brgm-rec.fr/SensorThingsGroundWater/v1.1",
-        "include": false
+        "include": true
     },
     "sta4hydrometry": {
         "url": "https://sta4hydrometry.brgm-rec.fr/FROST-Server/v1.1",
-        "include": false
+        "include": true
     },
     "sensorthings-wq": {
         "url": "https://sensorthings-wq.brgm-rec.fr/FROST-Server/v1.0",
@@ -29,10 +29,14 @@
     },
     "twsd": {
         "url": "https://twsd.internetofwater.dev/api/v1.1",
-        "include": true
+        "include": false
     },
     "WaterDataLabs": {
         "url": "https://labs.waterdata.usgs.gov/sta/v1.1/",
+        "include": false
+    },
+    "Geosciences Canada": {
+        "url": "https://sta.geosciences.ca",
         "include": true
     }
 }
