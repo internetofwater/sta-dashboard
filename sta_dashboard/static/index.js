@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             el.type = 'checkbox';
                             el.name = 'datastream_available';
                             el.value = dsId;
+                            el.style.margin = '5px';
                             dsSelectorDiv.appendChild(el);
                             dsSelectorDiv.appendChild(label);
 
@@ -107,12 +108,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         }
 
-                        linebreak = document.createElement('br');
+                        var linebreak = document.createElement('br');
                         dsSelectorDiv.appendChild(linebreak);
 
-                        submitButton = document.createElement('input')
+                        var vizStartDate = document.createElement('input');
+                        vizStartDate.type = 'date'
+                        vizStartDate.name = 'visulization-start-date';
+                        vizStartDate.value = start_date.value;
+                        vizStartDate.style.margin = '5px';
+                        dsSelectorDiv.appendChild(vizStartDate);
+                        
+                        var toDateText = document.createElement('span');
+                        toDateText.innerHTML = 'to';
+                        toDateText.style.margin = '5px';
+                        dsSelectorDiv.appendChild(toDateText);
+
+                        var vizEndDate = document.createElement('input');
+                        vizEndDate.type = 'date'
+                        vizEndDate.name = 'visulization-end-date';
+                        vizEndDate.value = end_date.value;
+                        vizEndDate.style.margin = '5px';
+                        dsSelectorDiv.appendChild(vizEndDate);
+                        dsSelectorDiv.appendChild(linebreak.cloneNode(true));
+
+                        var submitButton = document.createElement('input');
                         submitButton.type = 'button';
                         submitButton.value = 'Visualize';
+                        submitButton.style.margin = '5px';
                         dsSelectorDiv.appendChild(submitButton);
 
                         submitButton.onclick = function () {
@@ -128,8 +150,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 dsListValues.push(ds.value);
                             }
 
-                            visualizeDataStr.append('startDate', JSON.stringify(start_date.value));
-                            visualizeDataStr.append('endDate', JSON.stringify(end_date.value));
+                            visualizeDataStr.append('startDate', JSON.stringify(vizStartDate.value));
+                            visualizeDataStr.append('endDate', JSON.stringify(vizEndDate.value));
                             visualizeDataStr.append('thingId', JSON.stringify(thingId));
                             visualizeDataStr.append('dsList', JSON.stringify(dsListValues));
 
@@ -192,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         downloadCsvButton = document.createElement('input')
                         downloadCsvButton.type = 'button';
                         downloadCsvButton.value = 'Download as CSV';
+                        downloadCsvButton.style.margin = '5px';
                         dsSelectorDiv.appendChild(downloadCsvButton);
 
                         downloadCsvButton.onclick = function () {
