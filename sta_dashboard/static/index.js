@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const query_request = new XMLHttpRequest();
         const ds_request = new XMLHttpRequest();
         const visualize_request = new XMLHttpRequest();
+        const downloadCsv_request = new XMLHttpRequest();
 
         var properties_list = document.querySelectorAll('input[name="prop"]:checked');
         var start_date = document.querySelector('input[name="start-date"]');
@@ -79,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         for (i = 0; i < dsData.availableDatastreamsByProperty.length; i++) {
 
+                            // Populate available datastreams and make a checkbox for each
                             var dsName = dsData.availableDatastreamsByProperty[i];
                             var dsId = dsData.availableDatastreamsById[i];
                             var dsLink = dsData.availableDatastreamsByLink[i];
@@ -88,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             el.type = 'checkbox';
                             el.name = 'datastream_available';
                             el.value = dsId;
+                            el.style.margin = '5px';
                             dsSelectorDiv.appendChild(el);
                             dsSelectorDiv.appendChild(label);
 
@@ -105,8 +108,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         }
 
-                        submitButton = document.createElement('input')
-                        submitButton.type = 'submit';
+                        var linebreak = document.createElement('br');
+                        dsSelectorDiv.appendChild(linebreak);
+
+                        var vizStartDate = document.createElement('input');
+                        vizStartDate.type = 'date'
+                        vizStartDate.name = 'visulization-start-date';
+                        vizStartDate.value = start_date.value;
+                        vizStartDate.style.margin = '5px';
+                        dsSelectorDiv.appendChild(vizStartDate);
+                        
+                        var toDateText = document.createElement('span');
+                        toDateText.innerHTML = 'to';
+                        toDateText.style.margin = '5px';
+                        dsSelectorDiv.appendChild(toDateText);
+
+                        var vizEndDate = document.createElement('input');
+                        vizEndDate.type = 'date'
+                        vizEndDate.name = 'visulization-end-date';
+                        vizEndDate.value = end_date.value;
+                        vizEndDate.style.margin = '5px';
+                        dsSelectorDiv.appendChild(vizEndDate);
+                        dsSelectorDiv.appendChild(linebreak.cloneNode(true));
+
+                        var submitButton = document.createElement('input');
+                        submitButton.type = 'button';
+                        submitButton.value = 'Visualize';
+                        submitButton.style.margin = '5px';
                         dsSelectorDiv.appendChild(submitButton);
 
                         submitButton.onclick = function () {
@@ -122,11 +150,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                 dsListValues.push(ds.value);
                             }
 
-                            visualizeDataStr.append('startDate', JSON.stringify(start_date.value));
-                            visualizeDataStr.append('endDate', JSON.stringify(end_date.value));
+                            visualizeDataStr.append('startDate', JSON.stringify(vizStartDate.value));
+                            visualizeDataStr.append('endDate', JSON.stringify(vizEndDate.value));
                             visualizeDataStr.append('thingId', JSON.stringify(thingId));
                             visualizeDataStr.append('dsList', JSON.stringify(dsListValues));
-                            visualize_request.send(visualizeDataStr);
 
                             // Plot the data with chart.js
                             visualize_request.onload = function () {
@@ -180,7 +207,50 @@ document.addEventListener('DOMContentLoaded', function () {
                                 });
                                 canvasDiv.style.display = 'block';
                             }
+
+                            visualize_request.send(visualizeDataStr);
                         }
+
+                        downloadCsvButton = document.createElement('input')
+                        downloadCsvButton.type = 'button';
+                        downloadCsvButton.value = 'Download as CSV';
+                        downloadCsvButton.style.margin = '5px';
+                        dsSelectorDiv.appendChild(downloadCsvButton);
+
+                        downloadCsvButton.onclick = function () {
+                            downloadCsv_request.open('POST', '/download_observations');
+                            downloadCsv_request.responseType = 'blob';
+
+                            // Construct a form of data to send to server
+                            const downloadCsvDataStr = new FormData();
+                            var ds_list = document.querySelectorAll('input[name="datastream_available"]:checked');
+                            var dsListValues = new Array();
+                            for (var ds of ds_list.values()) {
+                                dsListValues.push(ds.value);
+                            }
+
+                            downloadCsvDataStr.append('startDate', JSON.stringify(start_date.value));
+                            downloadCsvDataStr.append('endDate', JSON.stringify(end_date.value));
+                            downloadCsvDataStr.append('thingId', JSON.stringify(thingId));
+                            downloadCsvDataStr.append('dsList', JSON.stringify(dsListValues));
+
+                            downloadCsv_request.onload = function (e) {
+                                var blob = e.currentTarget.response;
+                                var contentDispo = e.currentTarget.getResponseHeader('Content-Disposition');
+                                var fileName = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
+                                saveBlob(blob, fileName);
+
+                                function saveBlob(blob, fileName) {
+                                    var a = document.createElement('a');
+                                    a.href = window.URL.createObjectURL(blob);
+                                    a.download = fileName;
+                                    a.dispatchEvent(new MouseEvent('click'));
+                                }
+                            }
+
+                            downloadCsv_request.send(downloadCsvDataStr);
+                        }
+
                     }
 
                     chartModal.style.display = 'block';

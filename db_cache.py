@@ -2,6 +2,8 @@ import requests
 import time
 import json
 
+import pandas as pd
+
 from sta_dashboard import db
 from sta_dashboard.models import Thing, Datastream, ObservedProperty
 from sta_dashboard.utils import *
@@ -49,8 +51,12 @@ class Endpoint:
             response_json = response.json()
             for thing in response_json['value']:
                 
-                if not thing['Locations']:
-                    continue # skip the records that don't have location info
+                if not thing['Locations'] or not thing['@iot.id']:
+                    continue # skip the records that don't have location info or an iot.id
+                
+                for thing_key in ['name', 'description', 'Datastreams']:
+                    if thing_key not in thing.keys():
+                        thing[thing_key] = 'NA'
                 
                 cached_things.append(
                     {
@@ -66,6 +72,10 @@ class Endpoint:
                 response = requests.get(response.json()['@iot.nextLink'])
             else:
                 break
+        
+        cached_things_df = pd.DataFrame.from_records(cached_things)
+        cached_things_df = cached_things_df.drop_duplicates(subset=['id'])
+        cached_things = cached_things_df.to_dict(orient='records')
             
         return cached_things
     
@@ -115,7 +125,11 @@ class Endpoint:
                 response = requests.get(response.json()['@iot.nextLink'])
             else:
                 break
-            
+        
+        cached_ops_df = pd.DataFrame.from_records(cached_ops)
+        cached_ops_df = cached_ops_df.drop_duplicates(subset=['id'])
+        cached_ops = cached_ops_df.to_dict(orient='records')    
+        
         return cached_ops
 
 
@@ -146,6 +160,7 @@ if __name__ == '__main__':
                 ','.join(['@'.join([str(ds['@iot.id']), endpoint]) for ds in thing['datastreams']])
             db.session.add(new_thing_row)
 
+            ds_ids = []
             # Add datastream rows
             for ds in thing['datastreams']:
                 
@@ -155,6 +170,10 @@ if __name__ == '__main__':
                         [convert_date(d) for d in ds['phenomenonTime'].split('/')]
                 else:
                     phenomenonStartDate, phenomenonEndDate = None, None
+                    
+                if str(ds['@iot.id']) in ds_ids:
+                    continue
+                ds_ids.append(str(ds['@iot.id']))
                     
                 new_datastream_row = Datastream(
                     id='@'.join([str(ds['@iot.id']), endpoint]),
@@ -170,7 +189,6 @@ if __name__ == '__main__':
                 )
                 db.session.add(new_datastream_row)
             
-
         # Insert observed property rows
         for op in cached_ops:
             new_op_row = ObservedProperty(**op)

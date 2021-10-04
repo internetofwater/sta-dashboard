@@ -8,7 +8,12 @@
 tests/
 
 # Database
-*.db
+**/*.db
+**/*.sqlite3
+sta_dashboard/data/*
 
 # Virtual environment
 **/env
+
+# Others
+**/*.csv

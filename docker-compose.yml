@@ -2,21 +2,12 @@ version: "3.6"
 services: 
     flask:
         build: ./
-        depends_on: 
-            postgres:
-                condition: service_healthy
         env_file:
             - .env
         ports: 
             - "${FLASK_HOST_PORT}:5000"
+        volumes:
+            - db-data:/app/sta_dashboard/data
         restart: always
-    postgres:
-        image: "postgres:alpine"
-        env_file:
-            - .env
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U test -d test"]
-            interval: 5s
-            timeout: 2s
-            retries: 3
-        restart: always
+volumes:
+    db-data:
