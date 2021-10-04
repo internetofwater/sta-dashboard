@@ -10,6 +10,7 @@ tests/
 # Database
 **/*.db
 **/*.sqlite3
+sta_dashboard/data/*
 
 # Virtual environment
 **/env

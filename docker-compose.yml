@@ -6,4 +6,8 @@ services:
             - .env
         ports: 
             - "${FLASK_HOST_PORT}:5000"
+        volumes:
+            - db-data:/app/sta_dashboard/data
         restart: always
+volumes:
+    db-data:
