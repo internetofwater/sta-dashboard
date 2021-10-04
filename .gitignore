@@ -8,7 +8,8 @@
 tests/
 
 # Database
-*.db
+**/*.db
+**/*.sqlite3
 
 # Virtual environment
 **/env
