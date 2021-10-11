@@ -100,10 +100,10 @@ def query_points():
                 Datastream.id.in_(ds_ids)
             ).all()
             
+        geojson_recoding = False
         if query_result:
             
             first_row_thing = query_result[0][-1]
-            geojson_recoding = False
             if 'geometry' in first_row_thing.keys():
                 first_latlon = first_row_thing['geometry']['coordinates']
                 geojson_recoding = True # flag for if geojson needs to be recoded
