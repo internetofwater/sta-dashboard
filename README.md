@@ -18,7 +18,7 @@ This is some good interactive documentation for the API, focus on the GET reques
 # Usage
 ## Select which endpoints to include:
 ### Option 1: Start from scratch
-- Edit endpoints to include in `endpoints.json`.
+- Edit endpoints to include in `endpoints.json`. **No space allowed in endpoint keys.**
 
 ### Option 2: Load a external pre-cached database
 - Edit environment variables `SQLITE_DB_FILENAME` in `.env` file. The actual SQLite databse file should be place under `sta_dashboard/data/`. **Loading pre-cached database will overwrite settings in `endpoints.json`.**

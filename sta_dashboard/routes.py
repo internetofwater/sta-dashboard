@@ -35,8 +35,8 @@ def query_points():
     # regex to extract endpoint names from strings
     endpoints = re.findall(r'\w+', request.form['endpoints']) #TODO: support names that contain non-letter chars
     endpoints = list(set(endpoints))
-    properties_raw = request.form['properties']
-    properties = [' '.join(re.findall(r'\w+', s)) for s in properties_raw.split(',')]
+    properties_raw = request.form['properties'].strip('[]')
+    properties = [s.strip(r'""') for s in properties_raw.split(',')]
     # TODO: use regex to extract datetime string
     
     # get ids of datastreams that have selected observed properties
@@ -56,6 +56,7 @@ def query_points():
     query_result_keys = [
         'phenomenonStartDate', 'phenomenonEndDate', 'endpoint', 'name', 'selfLink', 'thingId', 'location_geojson'
     ]
+
     for endpoint in endpoints:
         
         query_result = Datastream.query.with_entities(
@@ -66,35 +67,50 @@ def query_points():
             Datastream.selfLink,
             Datastream.thingId,
             Thing.location_geojson
-            ).\
-                join(Thing, Datastream.thingId==Thing.id).\
-                    filter(
-                        or_(
-                            and_(
-                                Datastream.phenomenonStartDate <= queryEndDate,
-                                Datastream.phenomenonStartDate >= queryStartDate
-                            ),
-                            and_(
-                                Datastream.phenomenonEndDate >= queryStartDate,
-                                Datastream.phenomenonEndDate <= queryEndDate
-                            ),
-                            and_(
-                                Datastream.phenomenonStartDate >= queryStartDate,
-                                Datastream.phenomenonEndDate <= queryEndDate
-                            ),
-                            and_(
-                                Datastream.phenomenonStartDate <= queryStartDate,
-                                Datastream.phenomenonEndDate >= queryEndDate
-                            )
-                        ),
-                        Datastream.endpoint == endpoint,
-                        Datastream.id.in_(ds_ids)
-                    ).\
-                        all()
+            ).join(Thing, Datastream.thingId==Thing.id)
         
+        if queryStartDate == datetime.min and queryEndDate == datetime.max:
+            query_result = query_result.filter(
+                Datastream.endpoint == endpoint,
+                Datastream.id.in_(ds_ids)
+            ).all()
+            
+        else:
+            
+            query_result = query_result.filter(
+                or_(
+                    and_(
+                        Datastream.phenomenonStartDate <= queryEndDate,
+                        Datastream.phenomenonStartDate >= queryStartDate
+                    ),
+                    and_(
+                        Datastream.phenomenonEndDate >= queryStartDate,
+                        Datastream.phenomenonEndDate <= queryEndDate
+                    ),
+                    and_(
+                        Datastream.phenomenonStartDate >= queryStartDate,
+                        Datastream.phenomenonEndDate <= queryEndDate
+                    ),
+                    and_(
+                        Datastream.phenomenonStartDate <= queryStartDate,
+                        Datastream.phenomenonEndDate >= queryEndDate
+                    )
+                ),
+                Datastream.endpoint == endpoint,
+                Datastream.id.in_(ds_ids)
+            ).all()
+            
         if query_result:
             
-            first_latlon = query_result[0][-1]['coordinates']
+            first_row_thing = query_result[0][-1]
+            geojson_recoding = False
+            if 'geometry' in first_row_thing.keys():
+                first_latlon = first_row_thing['geometry']['coordinates']
+                geojson_recoding = True # flag for if geojson needs to be recoded
+                
+            else:
+                first_latlon = first_row_thing['coordinates']
+                
             while True:
                 if not isinstance(first_latlon[0], list):
                     break
@@ -105,6 +121,10 @@ def query_points():
             first_latlons.append(tuple(first_latlon[::-1]))
             
         query_df = pd.DataFrame(query_result, columns=query_result_keys)
+        
+        if geojson_recoding:
+            query_df['location_geojson'] = \
+                query_df['location_geojson'].apply(lambda x: x['geometry'])
         
         unique_locations = query_df.drop_duplicates(
             'thingId')[['thingId', 'location_geojson']]
