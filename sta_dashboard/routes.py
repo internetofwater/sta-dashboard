@@ -201,7 +201,8 @@ def makeAPICallUrl(selfLink, queryStartDate, queryEndDate):
 
 
 def query_observations(thingId, dsList, startDate, endDate):
-    query_result = Datastream.query.with_entities(
+    query_results = Datastream.query.with_entities(
+        Datastream.name,
         Datastream.selfLink,
         Datastream.unitOfMeasurement
     ).\
@@ -215,7 +216,8 @@ def query_observations(thingId, dsList, startDate, endDate):
         extract_date(startDate, endDate)
                 
     output_observations = []
-    for selfLink, unitOfMeasurement in query_result:
+    unavailable_list = []
+    for name, selfLink, unitOfMeasurement in query_results:
         dataset = {}
         points = []
 
@@ -233,6 +235,10 @@ def query_observations(thingId, dsList, startDate, endDate):
         dataset['showLine'] = True
         dataset['fill'] = False
         dataset['observationsUrl'] = observationsUrl
+        
+        if not observationsResponse.json()['value']:
+            unavailable_list.append(observedProperty['name'])
+            continue
 
         observations = observationsResponse.json()['value'][0]
         values_df = pd.DataFrame(
@@ -249,19 +255,19 @@ def query_observations(thingId, dsList, startDate, endDate):
         dataset['data'] = points
         output_observations.append(dataset)
         
-    return output_observations
+    return output_observations, unavailable_list
 
 @app.route('/visualize_observations', methods=['POST'])
 def visualize_observations():
     thingId = request.form['thingId'][1:-1]
     dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
     
-    output_data = query_observations(
+    output_data, unavailable_dict = query_observations(
         thingId, dsList, request.form['startDate'], request.form['endDate']
     )
-    
     return jsonify({
-        'value': output_data
+        'value': output_data,
+        'unavailables': unavailable_dict
     })
 
 
@@ -270,7 +276,7 @@ def download_observations():
     thingId = request.form['thingId'][1:-1]
     dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
     
-    output_data = query_observations(
+    output_data, _ = query_observations(
         thingId, dsList, request.form['startDate'], request.form['endDate']
     )
     

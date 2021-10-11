@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Create a new Deflate for polygon locations
             const polygons = L.deflate({
-                minSize: 100,
+                minSize: 20,
                 markerLayer: markers
             });
             
@@ -158,6 +158,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             // Plot the data with chart.js
                             visualize_request.onload = function () {
                                 var observations = JSON.parse(visualize_request.responseText);
+
+                                var missing_ds_warning = `Observations not available at selected locations and date range for:\n${observations.unavailables.join(', ')}`
+                                window.alert(missing_ds_warning)
+
                                 var canvasEl = document.createElement('canvas');
                                 canvasEl.maintainAspectRatio = false;
                                 canvasDiv.appendChild(canvasEl);
