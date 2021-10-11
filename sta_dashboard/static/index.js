@@ -159,8 +159,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             visualize_request.onload = function () {
                                 var observations = JSON.parse(visualize_request.responseText);
 
-                                var missing_ds_warning = `Observations not available at selected locations and date range for:\n${observations.unavailables.join(', ')}`
-                                window.alert(missing_ds_warning)
+                                if (observations.unavailables.length > 0) {
+                                    var missing_ds_warning = `Observations not available at selected locations and date range for:\n${observations.unavailables.join(', ')}`
+                                    window.alert(missing_ds_warning)
+                                }
 
                                 var canvasEl = document.createElement('canvas');
                                 canvasEl.maintainAspectRatio = false;
