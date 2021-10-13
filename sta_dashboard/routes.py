@@ -59,6 +59,8 @@ def query_points():
 
     for endpoint in endpoints:
         
+        geojson_recoding = False
+
         query_result = Datastream.query.with_entities(
             Datastream.phenomenonStartDate,
             Datastream.phenomenonEndDate,
@@ -103,7 +105,6 @@ def query_points():
         if query_result:
             
             first_row_thing = query_result[0][-1]
-            geojson_recoding = False
             if 'geometry' in first_row_thing.keys():
                 first_latlon = first_row_thing['geometry']['coordinates']
                 geojson_recoding = True # flag for if geojson needs to be recoded
