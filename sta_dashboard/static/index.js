@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     var loader = document.getElementById('map-loader');
+    var mapWrapper = document.getElementById('map-wrapper');
     
     document.querySelector('#query-filters').onsubmit = function () {
 
@@ -62,6 +63,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     var thingId = e.target.options.title
 
                     var chartModal = document.getElementById('visualizationModal');
+                    chartModal.style.borderRadius = '25px';
+                    chartModal.style.padding = "10px";
+
                     var span = document.getElementsByClassName("close")[0];
                     var canvasDiv = document.getElementById('canvasDiv');
                     canvasDiv.style.display = 'none';
@@ -139,6 +143,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         submitButton.onclick = function () {
 
+                            var chartLoader = loader.cloneNode(true);
+                            chartLoader.classList.add('loader');
+                            chartLoader.style.display = 'block';
+                            mapWrapper.appendChild(chartLoader);
+
                             canvasDiv.innerHTML = '';
                             visualize_request.open('POST', '/visualize_observations');
 
@@ -159,9 +168,22 @@ document.addEventListener('DOMContentLoaded', function () {
                             visualize_request.onload = function () {
                                 var observations = JSON.parse(visualize_request.responseText);
 
+                                chartLoader.style.display = 'none';
+                                
                                 if (observations.unavailables.length > 0) {
-                                    var missing_ds_warning = `Observations not available at selected locations and date range for:\n${observations.unavailables.join(', ')}`
-                                    window.alert(missing_ds_warning)
+                                    var missingDsWarning = `Observations not available at the selected location and date range for:\n${observations.unavailables.join(', ')}`
+                                    window.alert(missingDsWarning)
+                                }
+
+                                if (observations.ifTruncateList.length > 0) {
+                                    var ifTruncateListEl = document.createElement('strong');
+                                    // var boldText = document.createElement('strong');
+                                    var truncateWarningTextNode = document.createTextNode("Only the most recent 1000 observations are shown for:");
+                                    ifTruncateListEl.appendChild(truncateWarningTextNode);
+                                    ifTruncateListEl.appendChild(linebreak.cloneNode(true))
+                                    truncateWarningTextNode = document.createTextNode(`${observations.ifTruncateList.join(', ')}`)
+                                    ifTruncateListEl.appendChild(truncateWarningTextNode);
+                                    canvasDiv.appendChild(ifTruncateListEl);
                                 }
 
                                 var canvasEl = document.createElement('canvas');
@@ -260,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     chartModal.style.display = 'block';
-                    span.onclick = function () {
+                    span.onclick = function () { // TODO: remove datastream selections when click on close button
                         canvasDiv.innerHTML = '';
                         chartModal.style.display = "none";
                     }

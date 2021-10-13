@@ -3,6 +3,7 @@ body {
     height: 100vh;
     bottom: 0;
     overflow: hidden;
+    font-family: 'Open Sans', sans-serif;
 }
 
 #container {
@@ -26,6 +27,14 @@ body {
     left: 12vw;
     right: 0;
     height: 100%;
+}
+
+#map-loader{
+  border-radius: 10px;
+}
+
+.loader{
+  border-radius: 10px;
 }
 
 #map {
