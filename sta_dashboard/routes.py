@@ -200,6 +200,27 @@ def makeAPICallUrl(selfLink, queryStartDate, queryEndDate):
     return observedPropertyUrl, observationsUrl
 
 
+def query_multiple_pages(response, upperLimit=1000):
+    
+    total_obs_list = []
+    total_obs = 0
+    
+    while total_obs <= upperLimit:
+        obs = response.json()['value'][0]
+        total_obs += obs['dataArray@iot.count']
+        total_obs_list += obs['dataArray']
+        
+        if '@iot.nextLink' in response.json().keys():
+            response = requests.get(response.json()['@iot.nextLink'])
+        else:
+            break
+        
+    total_obs_df = pd.DataFrame(
+        total_obs_list, columns=obs['components']
+    )
+    return total_obs_df.loc[:upperLimit-1], len(total_obs_df)>=upperLimit
+
+
 def query_observations(thingId, dsList, startDate, endDate):
     query_results = Datastream.query.with_entities(
         Datastream.name,
@@ -217,13 +238,14 @@ def query_observations(thingId, dsList, startDate, endDate):
                 
     output_observations = []
     unavailable_list = []
+    if_truncate_list = []
     for name, selfLink, unitOfMeasurement in query_results:
         dataset = {}
         points = []
 
         observedPropertyUrl, observationsUrl = makeAPICallUrl(
             selfLink, queryStartDate, queryEndDate)
-        observationsResponse = requests.get(observationsUrl)
+        
         observedPropertyResponse = requests.get(observedPropertyUrl)
 
         observedProperty = observedPropertyResponse.json()
@@ -231,19 +253,23 @@ def query_observations(thingId, dsList, startDate, endDate):
             observedProperty['name'],
             '({})'.format(unitOfMeasurement['name'])
         ])
+        
+        observationsResponse = requests.get(observationsUrl)
+                
+        if not observationsResponse.json()['value']:
+            unavailable_list.append(observedProperty['name'])
+            continue
+        
+        observations_df, observations_if_truncate = query_multiple_pages(observationsResponse)
+        if observations_if_truncate:
+            if_truncate_list.append(observedProperty['name'])
+
         dataset['description'] = observedProperty['description']
         dataset['showLine'] = True
         dataset['fill'] = False
         dataset['observationsUrl'] = observationsUrl
         
-        if not observationsResponse.json()['value']:
-            unavailable_list.append(observedProperty['name'])
-            continue
-
-        observations = observationsResponse.json()['value'][0]
-        values_df = pd.DataFrame(
-            observations['dataArray'], columns=observations['components'])
-        for _, row in values_df.iterrows():
+        for _, row in observations_df.iterrows():
             x_timestamp = datetime.strptime(row['phenomenonTime'].split(
                 '/')[0], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
             points.append(
@@ -255,19 +281,20 @@ def query_observations(thingId, dsList, startDate, endDate):
         dataset['data'] = points
         output_observations.append(dataset)
         
-    return output_observations, unavailable_list
+    return output_observations, unavailable_list, if_truncate_list
 
 @app.route('/visualize_observations', methods=['POST'])
 def visualize_observations():
     thingId = request.form['thingId'][1:-1]
     dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
     
-    output_data, unavailable_dict = query_observations(
+    output_data, unavailable_dict, if_truncate_list = query_observations(
         thingId, dsList, request.form['startDate'], request.form['endDate']
     )
     return jsonify({
         'value': output_data,
-        'unavailables': unavailable_dict
+        'unavailables': unavailable_dict,
+        'ifTruncateList': if_truncate_list
     })
 
 
@@ -276,7 +303,7 @@ def download_observations():
     thingId = request.form['thingId'][1:-1]
     dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
     
-    output_data, _ = query_observations(
+    output_data, _, _ = query_observations(
         thingId, dsList, request.form['startDate'], request.form['endDate']
     )
     

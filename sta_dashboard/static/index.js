@@ -160,8 +160,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                 var observations = JSON.parse(visualize_request.responseText);
 
                                 if (observations.unavailables.length > 0) {
-                                    var missing_ds_warning = `Observations not available at selected locations and date range for:\n${observations.unavailables.join(', ')}`
+                                    var missing_ds_warning = `Observations not available at the selected location and date range for:\n${observations.unavailables.join(', ')}`
                                     window.alert(missing_ds_warning)
+                                }
+
+                                if (observations.ifTruncateList.length > 0) {
+                                    var ifTruncateListEl = document.createElement('truncateWarning');
+                                    var truncateWarningTextNode = document.createTextNode("Only the most recent 1000 observations are shown for:");
+                                    ifTruncateListEl.appendChild(truncateWarningTextNode);
+                                    ifTruncateListEl.appendChild(linebreak.cloneNode(true))
+                                    truncateWarningTextNode = document.createTextNode(`${observations.ifTruncateList.join(', ')}`)
+                                    ifTruncateListEl.appendChild(truncateWarningTextNode);
+                                    canvasDiv.appendChild(ifTruncateListEl);
                                 }
 
                                 var canvasEl = document.createElement('canvas');
@@ -260,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     chartModal.style.display = 'block';
-                    span.onclick = function () {
+                    span.onclick = function () { // TODO: remove datastream selections when click on close button
                         canvasDiv.innerHTML = '';
                         chartModal.style.display = "none";
                     }
