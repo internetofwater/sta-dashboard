@@ -3,6 +3,7 @@ body {
     height: 100vh;
     bottom: 0;
     overflow: hidden;
+    font-family: 'Open Sans', sans-serif;
 }
 
 #container {
@@ -47,6 +48,11 @@ body {
     display: none;
     z-index:2;
     text-align: center;
+    border-radius: 10px;
+}
+
+.loader{
+  border-radius: 10px;
 }
 
 #visualizationModal {

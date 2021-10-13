@@ -35,8 +35,8 @@ def query_points():
     # regex to extract endpoint names from strings
     endpoints = re.findall(r'\w+', request.form['endpoints']) #TODO: support names that contain non-letter chars
     endpoints = list(set(endpoints))
-    properties_raw = request.form['properties']
-    properties = [' '.join(re.findall(r'\w+', s)) for s in properties_raw.split(',')]
+    properties_raw = request.form['properties'].strip('[]')
+    properties = [s.strip(r'""') for s in properties_raw.split(',')]
     # TODO: use regex to extract datetime string
     
     # get ids of datastreams that have selected observed properties
@@ -56,8 +56,11 @@ def query_points():
     query_result_keys = [
         'phenomenonStartDate', 'phenomenonEndDate', 'endpoint', 'name', 'selfLink', 'thingId', 'location_geojson'
     ]
+
     for endpoint in endpoints:
         
+        geojson_recoding = False
+
         query_result = Datastream.query.with_entities(
             Datastream.phenomenonStartDate,
             Datastream.phenomenonEndDate,
@@ -66,35 +69,50 @@ def query_points():
             Datastream.selfLink,
             Datastream.thingId,
             Thing.location_geojson
-            ).\
-                join(Thing, Datastream.thingId==Thing.id).\
-                    filter(
-                        or_(
-                            and_(
-                                Datastream.phenomenonStartDate <= queryEndDate,
-                                Datastream.phenomenonStartDate >= queryStartDate
-                            ),
-                            and_(
-                                Datastream.phenomenonEndDate >= queryStartDate,
-                                Datastream.phenomenonEndDate <= queryEndDate
-                            ),
-                            and_(
-                                Datastream.phenomenonStartDate >= queryStartDate,
-                                Datastream.phenomenonEndDate <= queryEndDate
-                            ),
-                            and_(
-                                Datastream.phenomenonStartDate <= queryStartDate,
-                                Datastream.phenomenonEndDate >= queryEndDate
-                            )
-                        ),
-                        Datastream.endpoint == endpoint,
-                        Datastream.id.in_(ds_ids)
-                    ).\
-                        all()
+            ).join(Thing, Datastream.thingId==Thing.id)
         
+        if queryStartDate == datetime.min and queryEndDate == datetime.max:
+            query_result = query_result.filter(
+                Datastream.endpoint == endpoint,
+                Datastream.id.in_(ds_ids)
+            ).all()
+            
+        else:
+            
+            query_result = query_result.filter(
+                or_(
+                    and_(
+                        Datastream.phenomenonStartDate <= queryEndDate,
+                        Datastream.phenomenonStartDate >= queryStartDate
+                    ),
+                    and_(
+                        Datastream.phenomenonEndDate >= queryStartDate,
+                        Datastream.phenomenonEndDate <= queryEndDate
+                    ),
+                    and_(
+                        Datastream.phenomenonStartDate >= queryStartDate,
+                        Datastream.phenomenonEndDate <= queryEndDate
+                    ),
+                    and_(
+                        Datastream.phenomenonStartDate <= queryStartDate,
+                        Datastream.phenomenonEndDate >= queryEndDate
+                    )
+                ),
+                Datastream.endpoint == endpoint,
+                Datastream.id.in_(ds_ids)
+            ).all()
+            
+        geojson_recoding = False
         if query_result:
             
-            first_latlon = query_result[0][-1]['coordinates']
+            first_row_thing = query_result[0][-1]
+            if 'geometry' in first_row_thing.keys():
+                first_latlon = first_row_thing['geometry']['coordinates']
+                geojson_recoding = True # flag for if geojson needs to be recoded
+                
+            else:
+                first_latlon = first_row_thing['coordinates']
+                
             while True:
                 if not isinstance(first_latlon[0], list):
                     break
@@ -105,6 +123,10 @@ def query_points():
             first_latlons.append(tuple(first_latlon[::-1]))
             
         query_df = pd.DataFrame(query_result, columns=query_result_keys)
+        
+        if geojson_recoding:
+            query_df['location_geojson'] = \
+                query_df['location_geojson'].apply(lambda x: x['geometry'])
         
         unique_locations = query_df.drop_duplicates(
             'thingId')[['thingId', 'location_geojson']]
@@ -180,8 +202,30 @@ def makeAPICallUrl(selfLink, queryStartDate, queryEndDate):
     return observedPropertyUrl, observationsUrl
 
 
+def query_multiple_pages(response, upperLimit=1000):
+    
+    total_obs_list = []
+    total_obs = 0
+    
+    while total_obs <= upperLimit:
+        obs = response.json()['value'][0]
+        total_obs += obs['dataArray@iot.count']
+        total_obs_list += obs['dataArray']
+        
+        if '@iot.nextLink' in response.json().keys():
+            response = requests.get(response.json()['@iot.nextLink'])
+        else:
+            break
+        
+    total_obs_df = pd.DataFrame(
+        total_obs_list, columns=obs['components']
+    )
+    return total_obs_df.loc[:upperLimit-1], len(total_obs_df)>=upperLimit
+
+
 def query_observations(thingId, dsList, startDate, endDate):
-    query_result = Datastream.query.with_entities(
+    query_results = Datastream.query.with_entities(
+        Datastream.name,
         Datastream.selfLink,
         Datastream.unitOfMeasurement
     ).\
@@ -195,13 +239,15 @@ def query_observations(thingId, dsList, startDate, endDate):
         extract_date(startDate, endDate)
                 
     output_observations = []
-    for selfLink, unitOfMeasurement in query_result:
+    unavailable_list = []
+    if_truncate_list = []
+    for name, selfLink, unitOfMeasurement in query_results:
         dataset = {}
         points = []
 
         observedPropertyUrl, observationsUrl = makeAPICallUrl(
             selfLink, queryStartDate, queryEndDate)
-        observationsResponse = requests.get(observationsUrl)
+        
         observedPropertyResponse = requests.get(observedPropertyUrl)
 
         observedProperty = observedPropertyResponse.json()
@@ -209,15 +255,23 @@ def query_observations(thingId, dsList, startDate, endDate):
             observedProperty['name'],
             '({})'.format(unitOfMeasurement['name'])
         ])
+        
+        observationsResponse = requests.get(observationsUrl)
+                
+        if not observationsResponse.json()['value']:
+            unavailable_list.append(observedProperty['name'])
+            continue
+        
+        observations_df, observations_if_truncate = query_multiple_pages(observationsResponse)
+        if observations_if_truncate:
+            if_truncate_list.append(observedProperty['name'])
+
         dataset['description'] = observedProperty['description']
         dataset['showLine'] = True
         dataset['fill'] = False
         dataset['observationsUrl'] = observationsUrl
-
-        observations = observationsResponse.json()['value'][0]
-        values_df = pd.DataFrame(
-            observations['dataArray'], columns=observations['components'])
-        for _, row in values_df.iterrows():
+        
+        for _, row in observations_df.iterrows():
             x_timestamp = datetime.strptime(row['phenomenonTime'].split(
                 '/')[0], '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
             points.append(
@@ -229,19 +283,20 @@ def query_observations(thingId, dsList, startDate, endDate):
         dataset['data'] = points
         output_observations.append(dataset)
         
-    return output_observations
+    return output_observations, unavailable_list, if_truncate_list
 
 @app.route('/visualize_observations', methods=['POST'])
 def visualize_observations():
     thingId = request.form['thingId'][1:-1]
     dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
     
-    output_data = query_observations(
+    output_data, unavailable_dict, if_truncate_list = query_observations(
         thingId, dsList, request.form['startDate'], request.form['endDate']
     )
-    
     return jsonify({
-        'value': output_data
+        'value': output_data,
+        'unavailables': unavailable_dict,
+        'ifTruncateList': if_truncate_list
     })
 
 
@@ -250,7 +305,7 @@ def download_observations():
     thingId = request.form['thingId'][1:-1]
     dsList = [s[1:-1] for s in request.form['dsList'][1:-1].split(',')]
     
-    output_data = query_observations(
+    output_data, _, _ = query_observations(
         thingId, dsList, request.form['startDate'], request.form['endDate']
     )
     
