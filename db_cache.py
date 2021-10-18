@@ -136,9 +136,13 @@ class Endpoint:
 
 if __name__ == '__main__':
 
-    if_append = os.environ["APPEND_TO_EXISTING"].title() == 'True'
-    
-    if if_append:
+    if os.environ['DROP_ALL'].title() == "True" or \
+        not os.path.exists(os.path.join('sta_dashboard', 'data', os.environ['SQLITE_DB_FILENAME'])):
+        db.drop_all()
+        db.create_all()
+        endpoints_to_cache = ENDPOINTS
+
+    else:
         cached_endpoints = \
             [t[0] for t in Thing.query.with_entities(Thing.endpoint).distinct().all()]
         selected_endpoints = \
@@ -148,10 +152,6 @@ if __name__ == '__main__':
              for k in list(set(selected_endpoints) - set(cached_endpoints))
              if ENDPOINTS[k]['include']
              }
-    else:
-        db.drop_all()
-        db.create_all()
-        endpoints_to_cache = ENDPOINTS
     
     for endpoint, endpoint_values in list(endpoints_to_cache.items()):
         

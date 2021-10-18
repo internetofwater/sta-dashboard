@@ -16,20 +16,20 @@ This is the official documentation for the API http://docs.opengeospatial.org/is
 This is some good interactive documentation for the API, focus on the GET requests https://gost1.docs.apiary.io/#
 
 # Usage
-## Select which endpoints to include:
-### Option 1: Start from scratch
-- Edit endpoints to include in `endpoints.json`. **No space allowed in endpoint keys.**
 
-### Option 2: Load a external pre-cached database
-- Edit environment variables `SQLITE_DB_FILENAME` in `.env` file. The actual SQLite databse file should be place under `sta_dashboard/data/`. **Loading pre-cached database will overwrite settings in `endpoints.json`.**
+## First-time use
+1. Edit `endpoints.json` to select which endpoints to be included in the application. **No space allowed in endpoint keys.**
+2. Edit `.env` environment variables:
+    - **SQLITE_DB_FILENAME (type:str)**: Filename for the cached database. If there's a pre-cached SQLite3 database file, put the file under `sta_dashboard/data` and the application will read from the cached SQLite3 database. Otherwise, the application will create a new SQLite3 database saved by this filename.
+    - **DROP_ALL (type:bool)**: If drop all existing cached records and restart caching. Make this `True` to re-cache previously cached records.
+    - **FLASK_HOST_PORT (type:int)**: Port number which the Flask web app will be running on.
+3. Run `docker-compose up -d` to run the Docker in the background.
+4. Access the application at `localhost:<FLASK_HOST_PORT>`
 
-With either option, run `docker-compose up` to start the application. The web app will be running on `localhost:${FLASK_HOST_PORT}` on your host machine.
-
-## Apply changes to `endpoints.json` or pre-cached db when the app is running:
-- Save all changes.
-    - If not loading a pre-cached databse, assign a different filename for `SQLITE_DB_FILENAME` in `.env` as the previous filename was used to create a cached database file.
-- Run `docker-compose build`.
-- RUn `docker-compose up`.
+## Make changes to the database for a running application
+1. Edit `endpoints.json` and `.env` to make desired changes.
+2. Run `docker-compose build` and then `docker-compose up -d`
+3. Access the application at `localhost:<FLASK_HOST_PORT>`
 
 # Dependencies
 - [See requirements.txt](requirements.txt)
@@ -51,5 +51,5 @@ With either option, run `docker-compose up` to start the application. The web ap
     1. [x] Feature visualization (connected time series plot, supports pan&zoom)
     2. [x] Export as CSV
     3. [x] Show links to datastreams when hover on datastream names
-## [ ] Docker containerization
-1. [x] Add docker-compose file to configure containers for web app and PostgreSQL database
+## [x] Docker containerization
+1. [x] Add docker-compose file to configure containers for web app and SQLite3 database
