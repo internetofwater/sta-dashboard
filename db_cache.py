@@ -1,6 +1,7 @@
 import requests
 import time
 import json
+import os
 
 import pandas as pd
 
@@ -135,12 +136,26 @@ class Endpoint:
 
 if __name__ == '__main__':
 
-    db.drop_all()
-    db.create_all()
+    if os.environ['DROP_ALL'].title() == "True" or \
+        not os.path.exists(os.path.join('sta_dashboard', 'data', os.environ['SQLITE_DB_FILENAME'])):
+        db.drop_all()
+        db.create_all()
+        endpoints_to_cache = ENDPOINTS
 
-    for endpoint in list(ENDPOINTS.keys()):
+    else:
+        cached_endpoints = \
+            [t[0] for t in Thing.query.with_entities(Thing.endpoint).distinct().all()]
+        selected_endpoints = \
+            [k for k, v in ENDPOINTS.items() if v['include']]
+        endpoints_to_cache = \
+            {k: ENDPOINTS[k] 
+             for k in list(set(selected_endpoints) - set(cached_endpoints))
+             if ENDPOINTS[k]['include']
+             }
+    
+    for endpoint, endpoint_values in list(endpoints_to_cache.items()):
         
-        if not ENDPOINTS[endpoint]['include']:
+        if not endpoint_values['include']:
             continue
         
         print('{}...'.format(endpoint))

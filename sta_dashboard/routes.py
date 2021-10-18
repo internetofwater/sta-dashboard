@@ -4,6 +4,8 @@ import requests
 import pdb
 from zipfile import ZipFile
 from io import BytesIO
+from pathlib import Path
+import json
 
 from flask import render_template, request, jsonify, send_file
 from sqlalchemy import or_, and_
@@ -13,18 +15,27 @@ from sta_dashboard import app
 from sta_dashboard.models import Thing, Datastream, ObservedProperty
 from sta_dashboard.utils import extract_date
     
+with open(Path(__file__).parent / '..' / 'endpoints.json') as f:
+    ENDPOINTS = json.load(f)
 
 @app.route('/')
 def index():
-    properties = ObservedProperty.query.with_entities(
+    endpoint_properties_pairs = ObservedProperty.query.with_entities(
         ObservedProperty.endpoint, ObservedProperty.name).distinct().all()
-    endpoints = set([s[0] for s in properties])
-    property_mapping = {}
-    for edp in endpoints:
-        property_mapping[edp] = []
     
-    for prop in properties:
-        property_mapping[prop[0]].append(prop[1])
+    endpoint_properties_df = pd.DataFrame.from_records(
+        endpoint_properties_pairs,
+        columns=['endpoint', 'properties']
+        )
+    
+    # If there are cached endpoints which aren't selected, don't show them
+    cached_endpoints = set(endpoint_properties_df.endpoint.unique())
+    included_endpoints = [k for k, v in ENDPOINTS.items() if v['include']]
+    intersection_endpoints = cached_endpoints.intersection(set(included_endpoints))
+
+    endpoint_filter = endpoint_properties_df.endpoint.isin(list(intersection_endpoints))
+    property_mapping = endpoint_properties_df[endpoint_filter]\
+        .groupby('endpoint')['properties'].apply(list).to_dict()
     
     return render_template('index.html', property_mapping=property_mapping)
 

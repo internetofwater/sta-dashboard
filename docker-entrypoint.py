@@ -1,7 +1,11 @@
-import os
-import subprocess
+import os, json, subprocess
 
-if not os.path.exists(os.path.join('sta_dashboard', 'data', os.environ["SQLITE_DB_FILENAME"])):
-    subprocess.run(['python', 'db_cache.py'])
-    
-subprocess.run(['python', 'app.py'])
+
+with open('endpoints.json') as f:
+    ENDPOINTS = json.load(f)
+
+
+if __name__ == '__main__':
+
+    subprocess.run(['python3', 'db_cache.py'])
+    subprocess.run(['python3', 'app.py'])
